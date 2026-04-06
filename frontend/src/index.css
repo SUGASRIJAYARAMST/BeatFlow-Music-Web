@@ -1,0 +1,87 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "daisyui" {
+  themes: caramel-latte --default, forest;
+  logs: false;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+}
+
+@layer base {
+  * {
+    @apply border-base-200/50;
+  }
+  body {
+    @apply m-0 min-h-screen bg-base-300 text-base-content font-sans;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float { 0%, 100% { transform: translate(0, 0) } 25% { transform: translate(5px, -8px) } 50% { transform: translate(0, -12px) } 75% { transform: translate(-5px, -8px) } }
+@keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+@keyframes wave-bar { 0% { height: 8px; opacity: 0.3 } 100% { height: 24px; opacity: 1 } }
+@keyframes flame-flicker { 0% { transform: scaleY(0.8) translateY(2px); opacity: 0.5 } 100% { transform: scaleY(1.2) translateY(-3px); opacity: 1 } }
+@keyframes fade-up { 0% { opacity: 0; transform: translateY(30px) } 100% { opacity: 1; transform: translateY(0) } }
+@keyframes fade-in { 0% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes scale-in { 0% { opacity: 0; transform: scale(0.8) } 100% { opacity: 1; transform: scale(1) } }
+@keyframes slide-in-left { 0% { opacity: 0; transform: translateX(-50px) } 100% { opacity: 1; transform: translateX(0) } }
+@keyframes slide-in-right { 0% { opacity: 0; transform: translateX(50px) } 100% { opacity: 1; transform: translateX(0) } }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3) } 50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.6) } }
+@keyframes gradient-shift { 0% { background-position: 0% 50% } 50% { background-position: 100% 50% } 100% { background-position: 0% 50% } }
+@keyframes bounce-subtle { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+@keyframes rotate-slow { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
+@keyframes border-glow { 0%, 100% { border-color: rgba(255, 255, 255, 0.1) } 50% { border-color: rgba(255, 255, 255, 0.3) } }
+
+.animate-float { animation: float 4s ease-in-out infinite }
+.shimmer { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent); background-size: 200% 100%; animation: shimmer 3s infinite }
+.glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.06) }
+.glass-dark { background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(8px) }
+.fade-up { animation: fade-up 0.8s ease-out both }
+.fade-in { animation: fade-in 0.6s ease-out both }
+.scale-in { animation: scale-in 0.5s ease-out both }
+.slide-left { animation: slide-in-left 0.8s ease-out both }
+.slide-right { animation: slide-in-right 0.8s ease-out both }
+.pulse-glow { animation: pulse-glow 2s ease-in-out infinite }
+.gradient-animate { background-size: 200% 200%; animation: gradient-shift 3s ease infinite }
+.bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite }
+.rotate-slow { animation: rotate-slow 20s linear infinite }
+.border-glow { animation: border-glow 2s ease-in-out infinite }
+.hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease }
+.hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2) }
+.hover-scale { transition: transform 0.3s ease }
+.hover-scale:hover { transform: scale(1.05) }
+
+.delay-1 { animation-delay: 0.1s }
+.delay-2 { animation-delay: 0.2s }
+.delay-3 { animation-delay: 0.3s }
+.delay-4 { animation-delay: 0.4s }
+.delay-5 { animation-delay: 0.5s }
+.delay-6 { animation-delay: 0.6s }
+.delay-7 { animation-delay: 0.7s }
+.delay-8 { animation-delay: 0.8s }
+
+.text-gradient {
+  @apply bg-gradient-to-r from-emerald-400 via-green-400 to-lime-400 bg-clip-text text-transparent;
+}
+
+.bg-main-gradient {
+  @apply bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/40 via-neutral-950 to-neutral-900;
+}

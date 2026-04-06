@@ -1,0 +1,37 @@
+{
+  "name": "beatflow-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/services/seed.js",
+    "cleanup": "node src/scripts/cleanup-cloudinary.js",
+    "sync-users": "node src/scripts/sync-clerk-users.js"
+  },
+  "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.5",
+    "@clerk/backend": "^3.2.4",
+    "@clerk/express": "^2.0.4",
+    "axios": "^1.7.0",
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^2.9.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-fileupload": "^1.5.2",
+    "express-rate-limit": "^7.5.0",
+    "express-zod-validator": "^1.0.1",
+    "helmet": "^8.1.0",
+    "mongoose": "^9.3.0",
+    "multer": "^2.1.1",
+    "music-metadata": "^11.12.3",
+    "node-cache": "^5.1.2",
+    "svix": "^1.90.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
