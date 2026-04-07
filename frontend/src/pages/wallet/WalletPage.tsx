@@ -286,8 +286,8 @@ const WalletPage = () => {
     return (
         <div className='h-full bg-[#121212]'>
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-6 max-w-2xl mx-auto'>
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-6 max-w-2xl mx-auto'>
                     <div className='text-center mb-8'>
                         <div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-medium border border-emerald-500/20 mb-4'>
                             {isAdmin ? <Crown className='size-4' /> : <WalletIcon className='size-4' />} {isAdmin ? t("admin_dashboard") : t("wallet_title")}

@@ -43,8 +43,8 @@ const SearchPage = () => {
     return (
         <div className='h-full bg-[#121212]'>
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-4 lg:p-8 max-w-6xl mx-auto'>
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-8 max-w-6xl mx-auto'>
                     {/* Search Bar */}
                     <div className='relative mb-8'>
                         <SearchIcon className='absolute left-4 top-1/2 -translate-y-1/2 size-5 text-black' />

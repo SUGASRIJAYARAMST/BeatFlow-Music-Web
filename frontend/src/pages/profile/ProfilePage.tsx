@@ -400,8 +400,8 @@ const ProfilePage = () => {
     return (
         <div className="h-full bg-[#0a0a0a]" onWheel={() => setShowImageOptions(false)}>
             <Topbar />
-            <ScrollArea className="h-[calc(100vh-180px)]">
-                <div className="p-6 lg:p-10 max-w-3xl mx-auto">
+            <ScrollArea className="h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]">
+                <div className="p-4 md:p-6 lg:p-10 max-w-3xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-4xl font-bold text-white tracking-tight mb-1">{t("profile_title")}</h1>
                         <p className="text-gray-400">{t("profile_subtitle")}</p>

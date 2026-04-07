@@ -139,11 +139,11 @@ const AlbumPage = () => {
     return (
         <div className='h-full bg-base-300'>
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-6'>
-                    <div className='flex items-end gap-6 mb-8'>
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-6'>
+                    <div className='flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 mb-6 md:mb-8'>
                         <div className='relative'>
-                            <img src={optimizeImage(currentAlbum.imageUrl, "lg")} alt={currentAlbum.title} className='size-48 rounded-lg object-cover shadow-2xl' />
+                            <img src={optimizeImage(currentAlbum.imageUrl, "lg")} alt={currentAlbum.title} className='size-32 md:size-48 rounded-lg object-cover shadow-2xl' />
                             {currentAlbum.isPremium && (
                                 <div className='absolute top-2 right-2 bg-amber-500/90 backdrop-blur-sm rounded-full p-1.5'>
                                     <Crown className='size-4 text-black' />

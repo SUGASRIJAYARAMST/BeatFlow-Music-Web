@@ -65,8 +65,8 @@ const HomePage = () => {
         <div className='h-full bg-main-gradient relative overflow-hidden'>
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.05)_0%,transparent_50%)] pointer-events-none" />
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-6 lg:p-10 max-w-7xl mx-auto'>
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-6 lg:p-10 max-w-7xl mx-auto'>
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className='text-4xl font-black text-gradient tracking-tight mb-2'>

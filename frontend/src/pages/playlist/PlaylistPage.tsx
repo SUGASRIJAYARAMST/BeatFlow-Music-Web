@@ -59,8 +59,8 @@ const PlaylistPage = () => {
     return (
         <div className='h-full bg-main-gradient'>
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-6 lg:p-10 max-w-7xl mx-auto'>
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-6 lg:p-10 max-w-7xl mx-auto'>
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className='text-4xl font-black text-gradient tracking-tight mb-1'>Playlists</h1>

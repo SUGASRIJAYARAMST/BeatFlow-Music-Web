@@ -24,6 +24,7 @@ const AudioPlayer = () => {
         setDuration,
         setCurrentTime
     } = usePlayerStore();
+    const hasRestoredRef = useRef(false);
 
     // Keep storeIsPlayingRef always synced
     const storeIsPlayingRef = useRef(false);
@@ -117,7 +118,6 @@ const AudioPlayer = () => {
         retryCountRef.current = 0;
         isSeekingRef.current = false;
         lastAppliedTimeRef.current = 0;
-        setCurrentTime(0);
 
         if (currentSong.duration && currentSong.duration > 0) {
             setDuration(currentSong.duration);
@@ -128,7 +128,23 @@ const AudioPlayer = () => {
         audio.crossOrigin = "anonymous";
         audio.load();
 
-        // After a brief delay, clear transitioning flag so events can resume
+        const savedTime = usePlayerStore.getState().currentTime;
+        const savedDuration = (usePlayerStore.getState() as any).duration;
+        const isRestore = savedTime > 0 && savedDuration > 0 && hasRestoredRef.current === false;
+
+        const onLoadedMetadata = () => {
+            if (isRestore) {
+                audio.currentTime = savedTime;
+                setCurrentTime(savedTime);
+                hasRestoredRef.current = true;
+            } else {
+                setCurrentTime(0);
+            }
+            lastAppliedTimeRef.current = audio.currentTime;
+        };
+
+        audio.addEventListener("loadedmetadata", onLoadedMetadata);
+
         setTimeout(() => {
             isTransitioningRef.current = false;
             if (storeIsPlayingRef.current) {
@@ -136,6 +152,10 @@ const AudioPlayer = () => {
                 audio.play().catch(() => {});
             }
         }, 100);
+
+        return () => {
+            audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+        };
 
     }, [currentSong?._id, currentSong?.audioUrl, currentSong?.duration, setDuration, setCurrentTime, stopInterval]);
 
@@ -175,7 +195,7 @@ const AudioPlayer = () => {
                     usePlayerStore.setState({ hasRepeatedOnce: false });
                     const nextIndex = state.currentIndex + 1;
                     if (nextIndex < state.queue.length) {
-                        state.playAlbum(state.queue, nextIndex);
+                        state.setQueueAndPlay(state.queue, nextIndex);
                     } else {
                         usePlayerStore.setState({ isPlaying: false, hasRepeatedOnce: false });
                     }
@@ -187,8 +207,7 @@ const AudioPlayer = () => {
                 return;
             }
             if (state.repeatMode === "all") {
-                audio.currentTime = 0;
-                audio.play().catch(() => {});
+                state.playNext();
                 return;
             }
             state.playNext();

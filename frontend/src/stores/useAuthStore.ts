@@ -11,14 +11,33 @@ interface AuthStore {
     checkAdminStatus: () => Promise<void>;
     fetchUserProfile: () => Promise<void>;
     reset: () => void;
+    setInitialized: (val: boolean) => void;
 }
 
 let checkAdminPromise: Promise<void> | null = null;
 let fetchProfilePromise: Promise<void> | null = null;
 
+const AUTH_STORAGE_KEY = "beatflow_auth_state";
+
+const loadPersistedAuth = () => {
+    try {
+        const data = localStorage.getItem(AUTH_STORAGE_KEY);
+        if (data) return JSON.parse(data);
+    } catch {}
+    return { isAdmin: false, user: null };
+};
+
+const savePersistedAuth = (isAdmin: boolean, user: User | null) => {
+    try {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ isAdmin, user }));
+    } catch {}
+};
+
+const persisted = loadPersistedAuth();
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
-    user: null,
-    isAdmin: false,
+    user: persisted.user || null,
+    isAdmin: persisted.isAdmin ?? false,
     isLoading: false,
     error: null,
     initialized: false,
@@ -30,9 +49,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             set({ isLoading: true, error: null });
             try {
                 const response = await axiosInstance.get("/auth/check-admin");
-                set({ isAdmin: response.data.admin });
+                const isAdmin = response.data.admin;
+                set({ isAdmin });
+                savePersistedAuth(isAdmin, get().user);
             } catch (error: any) {
                 set({ isAdmin: false, error: error.response?.data?.message || "" });
+                savePersistedAuth(false, get().user);
             } finally {
                 set({ isLoading: false });
                 checkAdminPromise = null;
@@ -50,6 +72,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             try {
                 const response = await axiosInstance.get("/users/profile");
                 set({ user: response.data });
+                savePersistedAuth(get().isAdmin, response.data);
             } catch (error: any) {
                 set({ user: null, error: error.response?.data?.message || "" });
             } finally {
@@ -61,9 +84,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return fetchProfilePromise;
     },
 
+    setInitialized: (val) => set({ initialized: val }),
+
     reset: () => {
         set({ user: null, isAdmin: false, isLoading: false, error: null, initialized: false });
         checkAdminPromise = null;
         fetchProfilePromise = null;
+        localStorage.removeItem(AUTH_STORAGE_KEY);
     },
 }));

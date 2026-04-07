@@ -105,7 +105,7 @@ const NotificationBell = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 max-h-96 bg-base-200 rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50">
+                <div className="fixed md:absolute right-4 md:right-0 top-12 md:top-full w-[calc(100vw-2rem)] md:w-80 max-h-96 bg-base-200 rounded-xl shadow-2xl border border-white/10 overflow-hidden" style={{ zIndex: 99999 }}>
                     <div className="flex items-center justify-between p-3 border-b border-white/10">
                         <span className="font-bold text-sm">Notifications</span>
                         {notifications.length > 0 && (

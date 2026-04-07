@@ -69,14 +69,14 @@ const PlaylistDetailPage = () => {
     return (
         <div className='h-full bg-main-gradient'>
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-6 lg:p-10 max-w-5xl mx-auto'>
-                    <button onClick={() => navigate("/playlists")} className='inline-flex items-center gap-2 text-base-content/40 hover:text-base-content mb-6 transition-colors'>
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-6 lg:p-10 max-w-5xl mx-auto'>
+                    <button onClick={() => navigate("/playlists")} className='inline-flex items-center gap-2 text-base-content/40 hover:text-base-content mb-4 md:mb-6 transition-colors'>
                         <ArrowLeft className='size-4' /> Back to Playlists
                     </button>
 
-                    <div className='flex items-end gap-6 mb-8'>
-                        <div className='size-48 bg-base-200/50 rounded-2xl flex items-center justify-center shrink-0 border border-white/5 shadow-2xl relative group'>
+                    <div className='flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 mb-6 md:mb-8'>
+                        <div className='size-32 md:size-48 bg-base-200/50 rounded-2xl flex items-center justify-center shrink-0 border border-white/5 shadow-2xl relative group'>
                             <ListMusic className='size-16 text-emerald-400/60' />
                             <button onClick={() => setShowEdit(true)} className='absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl'>
                                 <Pencil className='size-6 text-white' />

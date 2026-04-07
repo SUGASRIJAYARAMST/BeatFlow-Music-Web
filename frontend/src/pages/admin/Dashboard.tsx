@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef, type ReactNode } from "react";
 import { useMusicStore } from "../../stores/useMusicStore";
-import { Music, Disc, Users, CreditCard, TrendingUp, DollarSign, KeyRound, Check, X, Loader2, Tag, Megaphone, ToggleLeft, ToggleRight } from "lucide-react";
+import { usePlayerStore } from "../../stores/usePlayerStore";
+import { Music, Disc, Users, CreditCard, TrendingUp, DollarSign, KeyRound, Check, X, Loader2, Tag, Megaphone, ToggleLeft, ToggleRight, Play, Pause } from "lucide-react";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
+import { formatDuration, optimizeImage } from "../../lib/utils";
 
 const useCountUp = (end: number, duration: number = 1500) => {
     const [count, setCount] = useState(0);
@@ -63,6 +65,7 @@ const StatCard = ({ label, value, icon: Icon, color, bg, delay, isHighlighted }:
 
 const AdminDashboard = () => {
     const { stats, fetchStats } = useMusicStore();
+    const { recentSongs, refreshRecentSongs, currentSong, isPlaying, togglePlay, playAlbum } = usePlayerStore();
     const [highlightIndex, setHighlightIndex] = useState(0);
     const [pinRequests, setPinRequests] = useState<Array<{ _id: string; fullName: string; email: string; createdAt: string }>>([]);
     const [passwordRequests, setPasswordRequests] = useState<Array<{ _id: string; fullName: string; email: string; createdAt: string }>>([]);
@@ -71,7 +74,7 @@ const AdminDashboard = () => {
     const [offer, setOffer] = useState<{ discount: number; planId: string; active: boolean } | null>(null);
     const [announcements, setAnnouncements] = useState<Array<{ _id: string; title: string; isActive: boolean }>>([]);
     const [loadingOffer, setLoadingOffer] = useState(false);
-    useEffect(() => { fetchStats(); }, [fetchStats]);
+    useEffect(() => { fetchStats(); refreshRecentSongs(); }, [fetchStats, refreshRecentSongs]);
     useEffect(() => { fetchPinRequests(); fetchPasswordRequests(); fetchOfferData(); }, []);
     
     const fetchOfferData = async () => {
@@ -273,13 +276,63 @@ const AdminDashboard = () => {
             )}
 
             {stats.recentPayments && stats.recentPayments.length > 0 && (
-                <div className="card bg-base-100 shadow-xl rounded-lg p-6 border border-white/10">
+                <div className="card bg-base-100 shadow-xl rounded-lg p-6 border border-white/10 mb-8">
                     <h2 className="text-lg font-semibold mb-4">Recent Payments</h2>
                     <div className="space-y-3">
                         {stats.recentPayments.map((payment) => (
                             <div key={payment._id} className="flex items-center justify-between py-2 border-base-200 last:border-0">
                                 <div><p className="font-medium">{payment.clerkId}</p><p className="text-sm text-base-content/60">{payment.plan} plan</p></div>
                                 <div className="text-right"><p className="font-medium">₹{payment.amount}</p><span className={`text-xs px-2 py-0.5 rounded-full ${payment.status === "success" ? "bg-emerald-500/10 text-emerald-400" : payment.status === "pending" ? "bg-yellow-500/10 text-yellow-400" : "bg-red-500/10 text-red-400"}`}>{payment.status}</span></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {recentSongs.length > 0 && (
+                <div className="card bg-base-100 shadow-xl rounded-lg p-6 border border-white/10">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold">Recently Played Songs</h2>
+                        <button
+                            onClick={() => {
+                                if (isPlaying && recentSongs.some(s => String(s._id) === String(currentSong?._id))) {
+                                    togglePlay();
+                                } else {
+                                    playAlbum(recentSongs, 0);
+                                }
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-colors text-sm"
+                        >
+                            {isPlaying && recentSongs.some(s => String(s._id) === String(currentSong?._id)) ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+                            {isPlaying && recentSongs.some(s => String(s._id) === String(currentSong?._id)) ? "Pause" : "Play All"}
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {recentSongs.slice(0, 5).map((song, i) => (
+                            <div key={song._id} className="flex items-center gap-3 py-2 px-3 bg-base-200/50 rounded-lg hover:bg-base-200 transition-colors">
+                                <span className="text-sm text-base-content/60 w-5 text-center">{i + 1}</span>
+                                <img src={optimizeImage(song.imageUrl, "sm")} alt={song.title} className="size-10 rounded object-cover" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate">{song.title}</p>
+                                    <p className="text-xs text-base-content/60 truncate">{song.artist}</p>
+                                </div>
+                                <span className="text-xs text-base-content/60">{formatDuration(song.duration)}</span>
+                                <button
+                                    onClick={() => {
+                                        if (String(currentSong?._id) === String(song._id)) {
+                                            togglePlay();
+                                        } else {
+                                            playAlbum(recentSongs, i);
+                                        }
+                                    }}
+                                    className="size-8 rounded-full bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center transition-all"
+                                >
+                                    {String(currentSong?._id) === String(song._id) && isPlaying ? (
+                                        <Pause className="size-3.5 text-black" />
+                                    ) : (
+                                        <Play className="size-3.5 text-black ml-0.5" />
+                                    )}
+                                </button>
                             </div>
                         ))}
                     </div>

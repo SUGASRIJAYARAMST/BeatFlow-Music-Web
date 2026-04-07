@@ -267,8 +267,7 @@ export const requestPasswordChange = async (req, res, next) => {
 
     if (lastRequest) {
       const daysSinceLastRequest =
-        (Date.now() - new Date(lastRequest.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24);
+        (Date.now() - new Date(lastRequest.createdAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceLastRequest < 7) {
         return res
           .status(400)

@@ -199,10 +199,10 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
                 />
                 
                 {/* Dark Overlay on Hover */}
-                <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity' />
+                <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 md:transition-opacity' />
 
-                {/* Top Right Download Button (Visible on Hover) */}
-                <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 -translate-y-2 group-hover:translate-y-0 transition-all'>
+                {/* Top Right Download Button */}
+                <div className='absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 md:-translate-y-2 md:group-hover:translate-y-0 transition-all'>
                     <button 
                         onClick={handleDownload}
                         className='size-9 rounded-full bg-white/90 hover:bg-emerald-500 hover:text-white text-emerald-600 shadow-lg flex items-center justify-center transition-all'
@@ -211,8 +211,8 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
                     </button>
                 </div>
 
-                {/* Bottom Actions (Visible on Hover) */}
-                <div className='absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all'>
+                {/* Bottom Actions */}
+                <div className='absolute bottom-2 right-2 flex gap-1.5 md:opacity-0 md:group-hover:opacity-100 md:translate-y-2 md:group-hover:translate-y-0 transition-all'>
                     <button 
                         onClick={handleLike}
                         disabled={isLiking}
@@ -265,7 +265,7 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
 
             {/* Playlist Dropdown - outside overflow-hidden container */}
             {showPlaylistMenu && (
-                <div ref={menuRef} className='absolute -top-2 right-0 bg-base-200 rounded-lg shadow-2xl border border-white/10 p-2 min-w-56 z-[100]'>
+                <div ref={menuRef} className='absolute -top-5 right-2 bg-base-200 rounded-lg shadow-2xl border border-white/10 p-2 min-w-42 z-[100]'>
                     <div className='flex items-center justify-between mb-2 pb-2 border-b border-white/5'>
                         <span className='text-[10px] uppercase tracking-widest font-black text-emerald-400/80'>Add to Playlist</span>
                         <button onClick={(e) => { e.stopPropagation(); setShowPlaylistMenu(false); }}>

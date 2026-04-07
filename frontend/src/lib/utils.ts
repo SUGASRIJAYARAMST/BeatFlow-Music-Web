@@ -12,7 +12,7 @@ export const formatDuration = (seconds: number) => {
     return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
-export const GENRES = ["Pop", "Rock", "Hip-Hop", "Electronic", "Jazz", "Classical", "R&B", "Country", "Indie", "Metal", "Other"] as const;
+export const GENRES = ["Pop", "Rock", "Hip-Hop", "Electronic", "Jazz", "Classical", "R&B", "Country", "Indie", "Metal", "Blues", "Folk", "Soul", "Reggae", "EDM", "House", "Techno", "Trance", "Rap", "Latin", "K-Pop", "J-Pop", "Punk rock", "Alternative rock", "Other"] as const;
 
 export const optimizeImage = (url: string, size: "sm" | "md" | "lg" | "full" = "md"): string => {
     if (!url || !url.includes("cloudinary")) return url;

@@ -104,13 +104,13 @@ const AdminAlbums = () => {
       const queueWithoutDeleted = playerStore.queue.filter(s => !songIds.includes(s._id));
       if (queueWithoutDeleted.length !== playerStore.queue.length) {
         if (queueWithoutDeleted.length > 0) {
-          playerStore.playAlbum(queueWithoutDeleted, 0);
-        } else {
+            playerStore.setQueueAndPlay(queueWithoutDeleted, 0);
+          } else {
           playerStore.setCurrentSong(null);
           playerStore.setIsPlaying(false);
         }
       }
-      songIds.forEach(songId => removeRecentSong(songId));
+      songIds.forEach(songId => removeRecentSong(songId, playerStore.userId));
       
       await deleteAlbum(id);
       toast.success("Album deleted successfully");
@@ -122,7 +122,7 @@ const AdminAlbums = () => {
   const GENRES = [
     "Pop", "Rock", "Hip-Hop", "Rap", "R&B", "Soul", "Jazz", "Blues",
     "Country", "Folk", "Electronic", "EDM", "House", "Techno", "Trance",
-    "Classical", "Reggae", "Latin", "K-Pop", "J-Pop", "Other"
+    "Classical", "Reggae", "Latin", "K-Pop", "J-Pop", "Metal", "Punk rock", "Alternative rock", "Other"
   ];
 
   return (

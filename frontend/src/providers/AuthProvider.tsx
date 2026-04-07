@@ -16,7 +16,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const authUser = useAuthStore((state) => state.user);
     const { syncUser } = useUserStore();
     const subscriptionStore = useSubscriptionStore();
-    const { setPremiumStatus } = usePlayerStore();
+    const { setPremiumStatus, setUserId } = usePlayerStore();
     const { fetchLikedSongs } = useMusicStore();
 
     useEffect(() => {
@@ -49,9 +49,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         checkAdminStatus(),
                         fetchUserProfile(),
                         fetchLikedSongs(),
+                        subscriptionStore.checkSubscription(),
                     ]);
+                    setUserId(userId || null);
                     
-                    await subscriptionStore.checkSubscription();
                     const subState = useSubscriptionStore.getState();
                     const authState = useAuthStore.getState();
                     setPremiumStatus(subState.isPremium, authState.user?.role || null);

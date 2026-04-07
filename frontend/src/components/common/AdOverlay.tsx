@@ -17,7 +17,7 @@ const PRO_FEATURES = [
 ];
 
 const AdOverlay = () => {
-    const { isPremium, userRole, songsPlayedSinceLastAd, setIsPlaying } = usePlayerStore();
+    const { isPremium, userRole, shouldShowAd, setIsPlaying } = usePlayerStore();
     const navigate = useNavigate();
     const [visible, setVisible] = useState(false);
     const [countdown, setCountdown] = useState(AD_DURATION);
@@ -25,7 +25,7 @@ const AdOverlay = () => {
 
     useEffect(() => {
         if (isPremium || userRole === "admin" || visible) return;
-        if (songsPlayedSinceLastAd >= 4) {
+        if (shouldShowAd) {
             setVisible(true);
             setCountdown(AD_DURATION);
             usePlayerStore.getState().resetAdCounter();
@@ -33,7 +33,7 @@ const AdOverlay = () => {
             const audio = document.querySelector('audio');
             if (audio) audio.pause();
         }
-    }, [isPremium, userRole, songsPlayedSinceLastAd, visible]);
+    }, [isPremium, userRole, shouldShowAd, visible]);
 
     useEffect(() => {
         if (!visible) return;

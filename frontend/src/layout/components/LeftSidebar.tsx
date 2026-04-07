@@ -48,62 +48,62 @@ const LeftSidebar = () => {
           ...(showAdmin ? [{ to: "/admin", icon: LayoutDashboard, label: t("admin_dashboard") }] : []),
      ];
 
-     return (
-         <div className='h-full glass-dark flex flex-col border-r border-base-100/10'>
-             <div className='p-4'>
-                 <h1 className='text-xl font-bold text-gradient mb-6'>BeatFlow</h1>
-                 <nav className='space-y-1'>
-                     {allLinks.map((link) => (
-                         <Link
-                             key={link.to}
-                             to={link.to}
-                             className={cn(
-                                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300",
-                                 link.highlight
-                                     ? "text-emerald-400 hover:bg-emerald-500/10"
-                                     : "text-base-content/60 hover:text-base-content hover:bg-white/5",
-                                 location.pathname === link.to && "bg-emerald-500/10 text-emerald-400 shadow-sm"
-                             )}
-                         >
-                             <link.icon className='size-5' />
-                             {link.label}
-                         </Link>
-                     ))}
-                 </nav>
-             </div>
-             
-               <div className='flex-1 border-t border px-4 pt-4 flex flex-col min-h-0'>
-                   <div className='flex items-center gap-2 mb-3'>
-                       <Library className='size-5 text-base-content/60' />
-                        <span className='text-sm font-semibold text-base-content/60'>{t("your_library")}</span>
+      return (
+          <div className='h-full bg-[#121212] flex flex-col border-r border-base-100/10'>
+              <div className='p-4'>
+                  <h1 className='text-xl font-bold text-gradient mb-6'>BeatFlow</h1>
+                  <nav className='space-y-1'>
+                      {allLinks.map((link) => (
+                          <Link
+                              key={link.to}
+                              to={link.to}
+                              className={cn(
+                                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300",
+                                  link.highlight
+                                      ? "text-emerald-400 hover:bg-emerald-500/10"
+                                      : "text-white/80 hover:text-white hover:bg-white/5",
+                                  location.pathname === link.to && "bg-emerald-500/10 text-emerald-400 shadow-sm"
+                              )}
+                          >
+                              <link.icon className='size-5' />
+                              {link.label}
+                          </Link>
+                      ))}
+                  </nav>
+              </div>
+              
+                <div className='flex-1 border-t border-white/10 px-4 pt-4 flex flex-col min-h-0'>
+                    <div className='flex items-center gap-2 mb-3'>
+                        <Library className='size-5 text-white/60' />
+                        <span className='text-sm font-semibold text-white/60'>{t("your_library")}</span>
                    </div>
                    <ScrollArea className='flex-1 min-h-0'>
                           <div className='space-y-1'>
                               {user && playlists.map((pl) => (
-                                  <Link
-                                      key={pl._id}
-                                      to={`/playlists/${pl._id}`}
-                                      className={cn(
-                                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300",
-                                          location.pathname === `/playlists/${pl._id}`
-                                              ? "bg-white/10 text-base-content"
-                                              : "text-base-content/60 hover:text-base-content hover:bg-white/5"
-                                      )}
-                                  >
-                                      <ListMusic className='size-4 shrink-0 text-emerald-400/60' />
-                                      <span className='truncate'>{pl.name}</span>
-                                  </Link>
-                              ))}
-                              {Array.isArray(albums) && albums.map((album) => (
-                                  <Link
-                                      key={album._id}
-                                      to={`/albums/${album._id}`}
-                                      className={cn(
-                                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300",
-                                          location.pathname === `/albums/${album._id}`
-                                              ? "bg-white/10 text-base-content"
-                                              : "text-base-content/60 hover:text-base-content hover:bg-white/5"
-                                      )}
+                                   <Link
+                                       key={pl._id}
+                                       to={`/playlists/${pl._id}`}
+                                       className={cn(
+                                           "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300",
+                                           location.pathname === `/playlists/${pl._id}`
+                                               ? "bg-white/10 text-white"
+                                               : "text-white/80 hover:text-white hover:bg-white/5"
+                                       )}
+                                   >
+                                       <ListMusic className='size-4 shrink-0 text-emerald-400/60' />
+                                       <span className='truncate'>{pl.name}</span>
+                                   </Link>
+                               ))}
+                               {Array.isArray(albums) && albums.map((album) => (
+                                   <Link
+                                       key={album._id}
+                                       to={`/albums/${album._id}`}
+                                       className={cn(
+                                           "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300",
+                                           location.pathname === `/albums/${album._id}`
+                                               ? "bg-white/10 text-white"
+                                               : "text-white/80 hover:text-white hover:bg-white/5"
+                                       )}
                                   >
                                       <Disc className='size-4 shrink-0 text-emerald-400/60' />
                                       <span className='truncate'>{album.title}</span>
@@ -116,8 +116,8 @@ const LeftSidebar = () => {
 
               {!user && (
                  <div className='px-4 pb-2'>
-                     <SignInButton mode='modal'>
-                         <button className='flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-base-content/60 hover:text-base-content hover:bg-base-300 transition-colors w-full'>
+                      <SignInButton mode='modal'>
+                          <button className='flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-base-content/60 hover:text-base-content hover:bg-base-300 transition-colors w-full'>
                              <Heart className='size-5' />
                              {t("liked_songs")}
                          </button>

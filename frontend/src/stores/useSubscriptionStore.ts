@@ -29,13 +29,31 @@ interface SubscriptionStore {
 
 let checkSubPromise: Promise<void> | null = null;
 
+const SUB_STORAGE_KEY = "beatflow_sub_state";
+
+const loadPersistedSub = () => {
+    try {
+        const data = localStorage.getItem(SUB_STORAGE_KEY);
+        if (data) return JSON.parse(data);
+    } catch {}
+    return { isPremium: false, subscriptionPlan: "none", subscriptionExpiry: null, expiryTimestamp: null };
+};
+
+const savePersistedSub = (state: { isPremium: boolean; subscriptionPlan: string; subscriptionExpiry: string | null; expiryTimestamp: number | null }) => {
+    try {
+        localStorage.setItem(SUB_STORAGE_KEY, JSON.stringify(state));
+    } catch {}
+};
+
+const persisted = loadPersistedSub();
+
 export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
     isLoading: false,
     error: null,
-    isPremium: false,
-    subscriptionPlan: "none",
-    subscriptionExpiry: null,
-    expiryTimestamp: null,
+    isPremium: persisted.isPremium ?? false,
+    subscriptionPlan: persisted.subscriptionPlan || "none",
+    subscriptionExpiry: persisted.subscriptionExpiry || null,
+    expiryTimestamp: persisted.expiryTimestamp || null,
     initialized: false,
 
     createOrder: async (plan) => {
@@ -90,14 +108,17 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
             try {
                 const response = await axiosInstance.get("/payments/check-subscription");
                 const expiryMs = response.data.expiryTimestamp;
-                set({
+                const subState = {
                     isPremium: response.data.isPremium,
                     subscriptionPlan: response.data.subscriptionPlan,
                     subscriptionExpiry: response.data.subscriptionExpiry,
                     expiryTimestamp: expiryMs,
-                });
+                };
+                set(subState);
+                savePersistedSub(subState);
                 const { setPremiumStatus } = usePlayerStore.getState();
-                setPremiumStatus(response.data.isPremium, null);
+                const { user } = useAuthStore.getState();
+                setPremiumStatus(response.data.isPremium, user?.role || null);
             } catch (error: any) {
                 console.error("Subscription check error:", error);
             } finally {

@@ -27,6 +27,9 @@ const LikedSongsPage = () => {
 
     useEffect(() => { fetchLikedSongs(); }, [fetchLikedSongs]);
 
+    const isCurrentSongInLiked = likedSongs.some(s => String(s._id) === String(currentSongId));
+    const isPlayingLiked = isPlaying && isCurrentSongInLiked;
+
     const handlePlay = (song: Song, index: number) => {
         if (String(currentSongId) === String(song._id)) {
             togglePlay();
@@ -82,24 +85,24 @@ const LikedSongsPage = () => {
     return (
         <div className='h-full bg-base-300'>
             <Topbar />
-            <ScrollArea className='h-[calc(100vh-180px)]'>
-                <div className='p-6'>
-                    <div className='flex items-end gap-6 mb-8'>
-                        <div className='size-48 bg-gradient-to-br from-violet-700 to-zinc-900 rounded-lg flex items-center justify-center'>
-                            <Heart className='size-20 text-white' fill='white' />
+            <ScrollArea className='h-[calc(100vh-220px)] md:h-[calc(100vh-180px)]'>
+                <div className='p-4 md:p-6'>
+                    <div className='flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-6 mb-6 md:mb-8'>
+                        <div className='size-32 md:size-48 bg-gradient-to-br from-violet-700 to-zinc-900 rounded-lg flex items-center justify-center shrink-0'>
+                            <Heart className='size-12 md:size-20 text-white' fill='white' />
                         </div>
-                        <div>
+                        <div className='text-center md:text-left'>
                             <p className='text-sm text-base-content/60 uppercase tracking-wider'>Playlist</p>
-                            <h1 className='text-5xl font-bold mt-2'>Liked Songs</h1>
+                            <h1 className='text-3xl md:text-5xl font-bold mt-2'>Liked Songs</h1>
                             <p className='text-sm text-base-content/60 mt-2'>{likedSongs.length} songs</p>
                             <Button onClick={() => {
-                                if (isPlaying) {
+                                if (isPlayingLiked) {
                                     togglePlay();
                                 } else {
                                     playAlbum(likedSongs, 0);
                                 }
                             }} className='mt-4 bg-violet-500 hover:bg-violet-400 text-white'>
-                                {isPlaying ? <Pause className='size-4 mr-1' /> : <Play className='size-4 mr-1' />} {isPlaying ? "Pause" : "Play All"}
+                                {isPlayingLiked ? <Pause className='size-4 mr-1' /> : <Play className='size-4 mr-1' />} {isPlayingLiked ? "Pause" : "Play All"}
                             </Button>
                         </div>
                     </div>
@@ -111,26 +114,26 @@ const LikedSongsPage = () => {
                         </div>
                     ) : (
                         <div className='bg-base-200/50 rounded-lg overflow-hidden'>
-                            <div className='flex items-center gap-4 px-4 py-3 border-b border-base-200 text-base-content/60 text-sm'>
+                            <div className='hidden md:flex items-center gap-4 px-4 py-3 border-b border-base-200 text-base-content/60 text-sm'>
                                 <span className='w-6 text-center'>#</span>
                                 <span className='flex-1'>Title</span>
                                 <Clock className='size-4' />
                             </div>
                             {likedSongs.map((song, i) => (
-                                <div key={song._id} className='group relative flex items-center gap-4 px-4 py-3 hover:bg-base-200 transition-colors'>
-                                    <span className='text-base-content/60 w-6 text-center text-sm group-hover:hidden'>{i + 1}</span>
-                                    <span className='w-6 text-center text-sm hidden group-hover:block'>
+                                <div key={song._id} className='group relative flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2 md:py-3 hover:bg-base-200 transition-colors'>
+                                    <span className='text-base-content/60 w-6 text-center text-sm md:group-hover:hidden'>{i + 1}</span>
+                                    <span className='w-6 text-center text-sm hidden md:group-hover:block'>
                                         <button onClick={() => handlePlay(song, i)} className='text-base-content hover:text-emerald-400'>
                                             {currentSongId === song._id && isPlaying ? <Pause className='size-4' /> : <Play className='size-4' />}
                                         </button>
                                     </span>
-                                    <img src={optimizeImage(song.imageUrl, "sm")} alt={song.title} className='size-10 rounded object-cover' />
+                                    <img src={optimizeImage(song.imageUrl, "sm")} alt={song.title} className='size-10 md:size-10 rounded object-cover shrink-0' />
                                     <div className='flex-1 min-w-0'>
-                                        <p className='font-medium truncate'>{song.title}</p>
-                                        <p className='text-sm text-base-content/60 truncate'>{song.artist}</p>
+                                        <p className='font-medium truncate text-sm'>{song.title}</p>
+                                        <p className='text-xs text-base-content/60 truncate'>{song.artist}</p>
                                     </div>
-                                    <span className='text-sm text-base-content/60'>{formatDuration(song.duration)}</span>
-                                    <div className='flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all'>
+                                    <span className='text-xs md:text-sm text-base-content/60'>{formatDuration(song.duration)}</span>
+                                    <div className='hidden md:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all'>
                                         <button
                                             onClick={(e) => handleLike(e, song._id)}
                                             className='size-8 rounded-full shadow-lg flex items-center justify-center transition-all hover:bg-base-content/30 bg-emerald-500/20 text-emerald-500'

@@ -14,6 +14,7 @@ interface PersistedState {
     repeatMode: "none" | "one" | "all";
     volume: number;
     currentTime: number;
+    duration: number;
     songsPlayedSinceLastAd: number;
 }
 
@@ -36,6 +37,7 @@ const savePersistedState = (state: PersistedState) => {
             repeatMode: state.repeatMode,
             volume: state.volume,
             currentTime: state.currentTime,
+            duration: state.duration,
         }));
     } catch {}
 };
@@ -58,15 +60,19 @@ interface PlayerStore {
     hasRepeatedOnce: boolean;
     isPremium: boolean;
     userRole: string | null;
+    userId: string | null;
     volume: number;
     isMuted: boolean;
     currentTime: number;
     duration: number;
     songsPlayedSinceLastAd: number;
+    shouldShowAd: boolean;
     recentSongs: Song[];
 
     setPremiumStatus: (isPremium: boolean, userRole: string | null) => void;
+    setUserId: (userId: string | null) => void;
     playAlbum: (songs: Song[], startIndex?: number) => void;
+    setQueueAndPlay: (songs: Song[], startIndex?: number) => void;
     setCurrentSong: (song: Song | null) => void;
     togglePlay: () => void;
     playNext: () => void;
@@ -81,6 +87,7 @@ interface PlayerStore {
     setDuration: (time: number) => void;
     incrementAdCounter: () => void;
     resetAdCounter: () => void;
+    dismissAd: () => void;
     refreshRecentSongs: () => void;
 }
 
@@ -100,61 +107,111 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     hasRepeatedOnce: false,
     isPremium: false,
     userRole: null,
+    userId: null,
     volume: persisted.volume ?? 0.7,
     isMuted: false,
     currentTime: persisted.currentTime ?? 0,
     duration: 0,
     songsPlayedSinceLastAd: 0,
+    shouldShowAd: false,
     recentSongs: getRecentSongs(),
 
     setPremiumStatus: (isPremium, userRole) => set({ isPremium, userRole }),
+    setUserId: (userId) => {
+        set({ userId, recentSongs: getRecentSongs(userId) });
+    },
 
     playAlbum: (songs: Song[], startIndex = 0) => {
         if (songs.length === 0) return;
-        const { isPremium, userRole } = get();
+        const { isPremium, userRole, userId } = get();
         const song = songs[startIndex];
         if (song.isPremium && !checkAccess(song, isPremium, userRole)) {
             toast.error("Pro subscription required");
             return;
         }
-        addRecentSong(song);
+        addRecentSong(song, userId);
         set({
             queue: songs,
             currentSong: song,
             currentIndex: startIndex,
             isPlaying: true,
             hasRepeatedOnce: false,
-            recentSongs: getRecentSongs(),
+            recentSongs: getRecentSongs(userId),
+        });
+        debouncedSave({ ...get(), isPlaying: true, hasRepeatedOnce: false } as PersistedState);
+    },
+
+    setQueueAndPlay: (songs: Song[], startIndex = 0) => {
+        if (songs.length === 0) return;
+        const song = songs[startIndex];
+        set({
+            queue: songs,
+            currentSong: song,
+            currentIndex: startIndex,
+            isPlaying: true,
+            hasRepeatedOnce: false,
         });
         debouncedSave({ ...get(), isPlaying: true, hasRepeatedOnce: false } as PersistedState);
     },
 
     setCurrentSong: (song: Song | null) => {
         if (!song) return;
+        const { isPremium, userRole, songsPlayedSinceLastAd, userId } = get();
         const songIndex = get().queue.findIndex((s) => s._id === song._id);
-        addRecentSong(song);
+        addRecentSong(song, userId);
+
+        if (!isPremium && userRole !== "admin") {
+            const newCount = songsPlayedSinceLastAd + 1;
+            if (newCount >= 4) {
+                set({ shouldShowAd: true, isPlaying: false });
+                debouncedSave({ ...get() } as PersistedState);
+                return;
+            }
+            set({ songsPlayedSinceLastAd: newCount });
+        }
+
         set({
             currentSong: song,
             isPlaying: true,
             currentIndex: songIndex !== -1 ? songIndex : get().currentIndex,
             currentTime: 0,
-            recentSongs: getRecentSongs(),
+            recentSongs: getRecentSongs(userId),
         });
         debouncedSave({ ...get() } as PersistedState);
     },
 
     togglePlay: () => {
-        const next = !get().isPlaying;
-        console.log("togglePlay called, next state:", next);
+        const { isPlaying, currentSong, queue, currentIndex, repeatMode } = get();
+        const next = !isPlaying;
+
+        if (next && currentSong && queue.length > 0) {
+            const isLastSong = currentIndex === queue.length - 1;
+            const isQueueEnded = isLastSong && repeatMode === "none";
+            if (isQueueEnded) {
+                const firstSong = queue[0];
+                set({ currentSong: firstSong, currentIndex: 0, isPlaying: true, currentTime: 0 });
+                debouncedSave({ ...get() } as PersistedState);
+                return;
+            }
+        }
+
         set({ isPlaying: next });
         debouncedSave({ ...get() } as PersistedState);
     },
 
     playNext: () => {
-        const { currentIndex, queue, isShuffle, repeatMode, isPremium, userRole, songsPlayedSinceLastAd, currentSong } = get();
+        const { currentIndex, queue, isShuffle, repeatMode, isPremium, userRole, songsPlayedSinceLastAd, currentSong, userId } = get();
         if (queue.length === 0) return;
 
         if (repeatMode === "one") {
+            if (!isPremium && userRole !== "admin") {
+                const newCount = songsPlayedSinceLastAd + 1;
+                if (newCount >= 4) {
+                    set({ shouldShowAd: true, isPlaying: false });
+                    return;
+                }
+                set({ songsPlayedSinceLastAd: newCount });
+            }
             set({ currentTime: 0, isPlaying: true });
             debouncedSave({ ...get() } as PersistedState);
             return;
@@ -163,13 +220,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         let nextIndex = currentIndex + 1;
         if (isShuffle) {
             nextIndex = Math.floor(Math.random() * queue.length);
-            // Avoid playing same song
             while (nextIndex === currentIndex && queue.length > 1) {
                 nextIndex = Math.floor(Math.random() * queue.length);
             }
         }
 
-        // Prevent playing same song if it's the only one
         if (nextIndex >= queue.length && queue.length === 1) {
             set({ isPlaying: false });
             debouncedSave({ ...get() } as PersistedState);
@@ -179,17 +234,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         if (!isPremium && userRole !== "admin") {
             const newCount = songsPlayedSinceLastAd + 1;
             if (newCount >= 4) {
-                if (nextIndex < queue.length) {
-                    if (checkAccess(queue[nextIndex], isPremium, userRole)) {
-                        set({ currentSong: queue[nextIndex], currentIndex: nextIndex, songsPlayedSinceLastAd: 0, isPlaying: false });
-                    } else {
-                        set({ songsPlayedSinceLastAd: 0, isPlaying: false });
-                    }
-                } else if (repeatMode === "all") {
-                    set({ currentSong: queue[0], currentIndex: 0, songsPlayedSinceLastAd: 0, isPlaying: false });
-                } else {
-                    set({ songsPlayedSinceLastAd: 0, isPlaying: false });
-                }
+                set({ shouldShowAd: true, isPlaying: false });
                 debouncedSave({ ...get() } as PersistedState);
                 return;
             }
@@ -205,12 +250,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
                     return;
                 }
                 const next = freeSongs[Math.floor(Math.random() * freeSongs.length)];
-                set({ currentSong: next.song, currentIndex: next.index, isPlaying: true, currentTime: 0 });
+                addRecentSong(next.song, userId);
+                set({ currentSong: next.song, currentIndex: next.index, isPlaying: true, currentTime: 0, recentSongs: getRecentSongs(userId) });
             } else {
-                set({ currentSong: queue[nextIndex], currentIndex: nextIndex, isPlaying: true, currentTime: 0 });
+                addRecentSong(queue[nextIndex], userId);
+                set({ currentSong: queue[nextIndex], currentIndex: nextIndex, isPlaying: true, currentTime: 0, recentSongs: getRecentSongs(userId) });
             }
         } else if (repeatMode === "all") {
-            set({ currentSong: queue[0], currentIndex: 0, isPlaying: true, currentTime: 0 });
+            addRecentSong(queue[0], userId);
+            set({ currentSong: queue[0], currentIndex: 0, isPlaying: true, currentTime: 0, recentSongs: getRecentSongs(userId) });
         } else {
             set({ isPlaying: false });
         }
@@ -218,7 +266,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     },
 
     playPrevious: () => {
-        const { currentIndex, queue, isShuffle, currentTime, repeatMode, isPremium, userRole } = get();
+        const { currentIndex, queue, isShuffle, currentTime, repeatMode, isPremium, userRole, songsPlayedSinceLastAd, userId } = get();
         if (currentTime > 3) {
             set({ currentTime: 0 });
             debouncedSave({ ...get() } as PersistedState);
@@ -230,6 +278,16 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
             prevIndex = Math.floor(Math.random() * queue.length);
         }
 
+        if (!isPremium && userRole !== "admin") {
+            const newCount = songsPlayedSinceLastAd + 1;
+            if (newCount >= 4) {
+                set({ shouldShowAd: true, isPlaying: false });
+                debouncedSave({ ...get() } as PersistedState);
+                return;
+            }
+            set({ songsPlayedSinceLastAd: newCount });
+        }
+
         if (prevIndex >= 0) {
             if (!checkAccess(queue[prevIndex], isPremium, userRole)) {
                 const freeSongs = queue.map((s, i) => ({ song: s, index: i })).filter(({ song }) => checkAccess(song, isPremium, userRole));
@@ -238,18 +296,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
                     return;
                 }
                 const prev = freeSongs[Math.floor(Math.random() * freeSongs.length)];
-                set({ currentSong: prev.song, currentIndex: prev.index, isPlaying: true, currentTime: 0 });
+                addRecentSong(prev.song, userId);
+                set({ currentSong: prev.song, currentIndex: prev.index, isPlaying: true, currentTime: 0, recentSongs: getRecentSongs(userId) });
             } else {
-                set({ currentSong: queue[prevIndex], currentIndex: prevIndex, isPlaying: true, currentTime: 0 });
+                addRecentSong(queue[prevIndex], userId);
+                set({ currentSong: queue[prevIndex], currentIndex: prevIndex, isPlaying: true, currentTime: 0, recentSongs: getRecentSongs(userId) });
             }
         } else if (repeatMode === "all" && queue.length > 0) {
-            set({ currentSong: queue[queue.length - 1], currentIndex: queue.length - 1, isPlaying: true, currentTime: 0 });
+            addRecentSong(queue[queue.length - 1], userId);
+            set({ currentSong: queue[queue.length - 1], currentIndex: queue.length - 1, isPlaying: true, currentTime: 0, recentSongs: getRecentSongs(userId) });
         } else {
             set({ currentTime: 0 });
-        }
-        if (!isPremium && userRole !== "admin") {
-            const { songsPlayedSinceLastAd } = get();
-            set({ songsPlayedSinceLastAd: songsPlayedSinceLastAd + 1 });
         }
         debouncedSave({ ...get() } as PersistedState);
     },
@@ -296,6 +353,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         const { songsPlayedSinceLastAd } = get();
         set({ songsPlayedSinceLastAd: songsPlayedSinceLastAd + 1 });
     },
-    resetAdCounter: () => set({ songsPlayedSinceLastAd: 0 }),
-    refreshRecentSongs: () => set({ recentSongs: getRecentSongs() }),
+    resetAdCounter: () => set({ songsPlayedSinceLastAd: 0, shouldShowAd: false }),
+    dismissAd: () => set({ shouldShowAd: false }),
+    refreshRecentSongs: () => {
+        const { userId } = get();
+        set({ recentSongs: getRecentSongs(userId) });
+    },
 }));

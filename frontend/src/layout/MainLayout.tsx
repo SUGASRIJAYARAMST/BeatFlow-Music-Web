@@ -4,6 +4,7 @@ import LeftSidebar from "./components/LeftSidebar";
 import AudioPlayer from "./components/AudioPlayer";
 import AdOverlay from "../components/common/AdOverlay";
 import { PlaybackControls } from "./components/PlaybackControls";
+import { MobileSidebar } from "./components/MobileSidebar";
 import { usePlayerStore } from "../stores/usePlayerStore";
 
 const MainLayout = () => {
@@ -76,10 +77,14 @@ const MainLayout = () => {
     return (
         <div data-theme="forest" className='h-screen bg-main-gradient text-base-content flex flex-col overflow-hidden'>
             <div className='flex-1 flex overflow-hidden'>
-                <div className='w-64 shrink-0'>
+                <div className='hidden md:block w-64 shrink-0'>
                     <LeftSidebar />
                 </div>
-                <main className='flex-1 overflow-hidden'>
+                <main className='flex-1 overflow-hidden flex flex-col'>
+                    <div className='md:hidden flex items-center px-3 py-2 bg-black/40 backdrop-blur-md border-b border-white/5 shrink-0'>
+                        <MobileSidebar />
+                        <h1 className='text-lg font-bold text-gradient ml-3'>BeatFlow</h1>
+                    </div>
                     <Outlet />
                 </main>
             </div>
