@@ -27,6 +27,7 @@ import AdminPasswordRequests from "./pages/admin/PasswordRequests";
 import AdminSongs from "./pages/admin/Songs";
 import AdminAlbums from "./pages/admin/Albums";
 import AdminOffer from "./pages/admin/Offer";
+import AdminFeedback from "./pages/admin/Feedback";
 
 import WalletPage from "./pages/wallet/WalletPage";
 import NotFoundPage from "./pages/404/NotFoundPage";
@@ -41,6 +42,7 @@ function App() {
   const { userId } = useAuth();
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const checkAdminStatus = useAuthStore((state) => state.checkAdminStatus);
+  const fetchUserProfile = useAuthStore((state) => state.fetchUserProfile);
   const fetchNotifications = useNotificationStore(
     (state) => state.fetchNotifications,
   );
@@ -50,6 +52,7 @@ function App() {
   useEffect(() => {
     if (userId) {
       checkAdminStatus();
+      fetchUserProfile();
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 10000);
       return () => clearInterval(interval);
@@ -91,6 +94,7 @@ function App() {
               />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="offer" element={<AdminOffer />} />
+              <Route path="feedback" element={<AdminFeedback />} />
             </>
           )}
         </Route>
@@ -110,7 +114,16 @@ function App() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      <Toaster position="top-right" />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          className: '!bg-neutral-800 !text-white !border !border-neutral-700',
+          success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } },
+          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          duration: 5000,
+        }}
+        reverseOrder={false}
+      />
     </ErrorBoundary>
   );
 }

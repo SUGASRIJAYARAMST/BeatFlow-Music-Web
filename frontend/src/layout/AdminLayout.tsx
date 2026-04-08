@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useUser, useClerk } from "@clerk/react";
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard,  Music,  Disc,  Megaphone,  Users,  CreditCard,  Settings,  LogOut,  KeyRound,  Tag,  Menu,  User,  ArrowRight } from "lucide-react";
+  LayoutDashboard,  Music,  Disc,  Megaphone,  Users,  CreditCard,  Settings,  LogOut,  KeyRound,  Tag,  Menu,  User,  ArrowRight,  MessageSquare } from "lucide-react";
 import { cn } from "../lib/utils";
 import { axiosInstance } from "../lib/axios";
 import AudioPlayer from "./components/AudioPlayer";
@@ -18,6 +18,7 @@ const navItems = [
   { icon: CreditCard, label: "Subscriptions", path: "/admin/subscriptions" },
   { icon: KeyRound, label: "Password Requests", path: "/admin/password-requests" },
   { icon: Tag, label: "Offer", path: "/admin/offer" },
+  { icon: MessageSquare, label: "Feedback", path: "/admin/feedback" },
   { icon: Settings, label: "Settings", path: "/admin/settings" },
   { icon: LogOut, label: "Back to App", path: "/" },
 ];

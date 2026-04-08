@@ -3,6 +3,7 @@ import { useUser, useClerk } from "@clerk/react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
 import { ExternalLink, Database, Users, Image, Key, Shield, Loader2, LogOut, Pencil, Check, X, Camera, Crop } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMusicStore } from "../../stores/useMusicStore";
@@ -20,6 +21,7 @@ const AdminSettings = () => {
     const [savingName, setSavingName] = useState(false);
     const [showCropModal, setShowCropModal] = useState(false);
     const [cropImage, setCropImage] = useState<string | null>(null);
+    const [showClearCacheDialog, setShowClearCacheDialog] = useState(false);
     const { fetchSongs, fetchAlbums, fetchStats } = useMusicStore();
 
     const handleSaveName = async () => {
@@ -92,7 +94,7 @@ const AdminSettings = () => {
     };
 
     const handleClearCache = async () => {
-        if (!window.confirm("Are you sure you want to clear all cached data? This will not delete any songs or users.")) return;
+        setShowClearCacheDialog(false);
         try {
             setClearingCache(true);
             await fetchSongs();
@@ -206,7 +208,7 @@ const AdminSettings = () => {
                         <Button
                             variant='outline'
                             className='text-red-400 border-red-400/20 hover:bg-red-500/10'
-                            onClick={handleClearCache}
+                            onClick={() => setShowClearCacheDialog(true)}
                             disabled={clearingCache}
                         >
                             {clearingCache ? <Loader2 className='size-4 mr-2 animate-spin' /> : null}
@@ -214,6 +216,35 @@ const AdminSettings = () => {
                         </Button>
                     </div>
                 </div>
+
+                <Dialog open={showClearCacheDialog} onOpenChange={setShowClearCacheDialog}>
+                    <DialogContent className="bg-neutral-900 border border-neutral-700 text-white max-w-sm">
+                        <DialogHeader className="text-left space-y-2">
+                            <DialogTitle className="text-xl font-bold text-white">Clear Cache?</DialogTitle>
+                            <DialogDescription className="text-neutral-300 text-base">
+                                Are you sure you want to clear all cached data? This will not delete any songs or users.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex gap-3 pt-4">
+                            <Button 
+                                variant="outline" 
+                                className="flex-1 border-neutral-600 text-neutral-200 hover:bg-neutral-800 hover:text-white" 
+                                onClick={() => setShowClearCacheDialog(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="flex-1 bg-red-600 border-red-600 text-white hover:bg-red-700"
+                                onClick={handleClearCache}
+                                disabled={clearingCache}
+                            >
+                                {clearingCache ? <Loader2 className="size-4 mr-2 animate-spin" /> : null}
+                                Clear Cache
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 <button
                     onClick={handleSignOut}

@@ -9,7 +9,7 @@ import Topbar from "../../components/layout/Topbar";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Switch } from "../../components/ui/switch";
 import { Button } from "../../components/ui/button";
-import { User, Bell, CreditCard, LogOut, Clock, Heart, ListMusic, Crown, Calendar, Timer, Languages, RotateCcw, Pencil, ExternalLink, Key, ChevronRight, Eye, EyeOff, CheckCircle, XCircle, Hourglass, Camera, Crop, X, Upload, KeyRound, ShieldCheck, Loader2 } from "lucide-react";
+import { User, Bell, CreditCard, LogOut, Clock, Heart, ListMusic, Crown, Calendar, Timer, Languages, RotateCcw, Pencil, ExternalLink, Key, ChevronRight, Eye, EyeOff, CheckCircle, XCircle, Hourglass, Camera, Crop, X, Upload, KeyRound, ShieldCheck, Loader2, Headphones, Copy, Mail, Star, Send, MessageSquare } from "lucide-react";
 import { useUser, useClerk } from "@clerk/react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../../lib/axios";
@@ -82,6 +82,11 @@ const ProfilePage = () => {
     const [submittingPinRequest, setSubmittingPinRequest] = useState(false);
     const [forgotPinKeys, setForgotPinKeys] = useState<string[]>([]);
     const [lockedTimeRemaining, setLockedTimeRemaining] = useState<string | null>(null);
+    const [feedbackRating, setFeedbackRating] = useState(5);
+    const [feedbackText, setFeedbackText] = useState("");
+    const [submittingFeedback, setSubmittingFeedback] = useState(false);
+    const [userFeedbacks, setUserFeedbacks] = useState<any[]>([]);
+    const [showFeedbackCard, setShowFeedbackCard] = useState(false);
     const imageOptionsRef = useRef<HTMLDivElement>(null);
     const langDropdownRef = useRef<HTMLDivElement>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -200,17 +205,50 @@ const ProfilePage = () => {
         if (!editedName.trim()) return;
         try {
             setSaving(true);
-            await axiosInstance.put("/users/settings", { fullName: editedName.trim() });
+            const res = await axiosInstance.put("/users/settings", { fullName: editedName.trim() });
             toast.success("Name updated successfully");
             await fetchUserProfile();
             setIsEditingName(false);
             window.location.reload();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to update name");
+            console.error("Update name error:", error);
+            const msg = error.response?.data?.message || error.message || "Failed to update name";
+            toast.error(msg);
         } finally {
             setSaving(false);
         }
     };
+
+    const handleSubmitFeedback = async () => {
+        if (!feedbackText.trim()) {
+            toast.error("Please enter your feedback");
+            return;
+        }
+        setSubmittingFeedback(true);
+        try {
+            await axiosInstance.post("/feedback", { rating: feedbackRating, feedback: feedbackText.trim() });
+            toast.success("Feedback submitted!");
+            setFeedbackText("");
+            setFeedbackRating(5);
+            const res = await axiosInstance.get("/feedback/my-feedback");
+            setUserFeedbacks(res.data);
+            setShowFeedbackCard(false);
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to submit feedback");
+        } finally {
+            setSubmittingFeedback(false);
+        }
+    };
+
+    useEffect(() => {
+        const fetchFeedback = async () => {
+            try {
+                const res = await axiosInstance.get("/feedback/my-feedback");
+                setUserFeedbacks(res.data);
+            } catch (error) {}
+        };
+        fetchFeedback();
+    }, []);
 
     const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         setShowImageOptions(false);
@@ -590,8 +628,8 @@ const ProfilePage = () => {
                             </h2>
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="relative group">
-                                    {authUser?.imageUrl ? (
-                                        <img src={authUser.imageUrl} alt={authUser.fullName || ""} className="size-16 rounded-full border-2 border-white/10" />
+                                    {user?.imageUrl ? (
+                                        <img src={user.imageUrl} alt={user.fullName || ""} className="size-16 rounded-full border-2 border-white/10" />
                                     ) : (
                                         <div className="size-16 bg-white/5 rounded-full flex items-center justify-center">
                                             <User className="size-8 text-gray-500" />
@@ -612,13 +650,16 @@ const ProfilePage = () => {
                                         <Eye className="size-4 text-emerald-400" />
                                         View Pic
                                     </button>
-                                            <label 
-                                                onClick={() => setShowImageOptions(false)}
-                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left text-sm cursor-pointer"
-                                            >
+                                            <label className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left text-sm cursor-pointer">
                                                 <Upload className="size-4 text-amber-400" />
                                                 Upload Pic
-                                                <input type="file" accept="image/*" onChange={handleProfileImageChange} className="hidden" disabled={saving} />
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    onChange={handleProfileImageChange} 
+                                                    className="hidden" 
+                                                    disabled={saving} 
+                                                />
                                             </label>
                                         </div>
                                     )}
@@ -838,6 +879,127 @@ const ProfilePage = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Support Card */}
+                        <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">
+                            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <Headphones className="size-5 text-blue-400" /> Support
+                            </h2>
+                            <div className="space-y-3">
+                                <div className="p-4 bg-white/5 rounded-xl">
+                                    <p className="text-sm text-gray-400 mb-2">sugasrijayaramst@gmail.com</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => window.open("mailto:sugasrijayaramst@gmail.com?subject=BeatFlow Support", "_self")}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-colors text-sm"
+                                        >
+                                            <Mail className="size-4" /> Email
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText("sugasrijayaramst@gmail.com");
+                                                toast.success("Copied!");
+                                            }}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2 bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition-colors text-sm"
+                                        >
+                                            <Copy className="size-4" /> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white/5 rounded-xl">
+                                    <p className="text-sm text-gray-400 mb-2">sugasrijayaram2007@gmail.com</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => window.open("mailto:sugasrijayaram2007@gmail.com?subject=BeatFlow Support", "_self")}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-colors text-sm"
+                                        >
+                                            <Mail className="size-4" /> Email
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText("sugasrijayaram2007@gmail.com");
+                                                toast.success("Copied!");
+                                            }}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2 bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition-colors text-sm"
+                                        >
+                                            <Copy className="size-4" /> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Feedback Card */}
+                        <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">
+                            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <MessageSquare className="size-5 text-amber-400" /> Feedback
+                            </h2>
+                            
+                            {!showFeedbackCard ? (
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => setShowFeedbackCard(true)}
+                                        className="w-full p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-left"
+                                    >
+                                        <p className="text-sm font-medium text-gray-300">Share your feedback</p>
+                                        <p className="text-xs text-gray-500 mt-1">Help us improve</p>
+                                    </button>
+                                    
+                                    {userFeedbacks.length > 0 && (
+                                        <div className="space-y-2 mt-4">
+                                            <p className="text-sm text-gray-400">Your recent feedback:</p>
+                                            {userFeedbacks.slice(0, 3).map((fb: any) => (
+                                                <div key={fb._id} className="p-3 bg-white/5 rounded-lg">
+                                                    <div className="flex items-center gap-1 mb-1">
+                                                        {[1,2,3,4,5].map((star) => (
+                                                            <Star key={star} className={`size-3 ${star <= fb.rating ? "text-amber-400 fill-amber-400" : "text-gray-600"}`} />
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-sm text-gray-300 line-clamp-2">{fb.feedback}</p>
+                                                    {fb.reply && (
+                                                        <div className="mt-2 p-2 bg-emerald-500/10 rounded border border-emerald-500/20">
+                                                            <p className="text-xs text-emerald-400">Admin: {fb.reply}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button key={star} onClick={() => setFeedbackRating(star)}>
+                                                <Star className={`size-8 transition-colors ${star <= feedbackRating ? "text-amber-400 fill-amber-400" : "text-gray-600 hover:text-amber-300"}`} />
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <textarea
+                                        value={feedbackText}
+                                        onChange={(e) => setFeedbackText(e.target.value)}
+                                        placeholder="Write your feedback here..."
+                                        className="w-full h-24 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-amber-400/50 resize-none"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => { setShowFeedbackCard(false); setFeedbackText(""); setFeedbackRating(5); }}
+                                            className="flex-1 py-2 bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSubmitFeedback}
+                                            disabled={submittingFeedback}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2 bg-amber-500 hover:bg-amber-400 text-black font-medium rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            {submittingFeedback ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Subscription Card */}
                         <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">

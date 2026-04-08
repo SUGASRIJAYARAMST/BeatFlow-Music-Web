@@ -71,10 +71,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             set({ isLoading: true, error: null });
             try {
                 const response = await axiosInstance.get("/users/profile");
+                console.log("Fetched user profile:", response.data.clerkId, response.data.fullName);
                 set({ user: response.data });
                 savePersistedAuth(get().isAdmin, response.data);
             } catch (error: any) {
+                console.error("Fetch user profile error:", error);
                 set({ user: null, error: error.response?.data?.message || "" });
+                localStorage.removeItem(AUTH_STORAGE_KEY);
             } finally {
                 set({ isLoading: false });
                 fetchProfilePromise = null;

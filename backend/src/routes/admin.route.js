@@ -11,6 +11,8 @@ import {
   approvePasswordChange,
   rejectPasswordChange,
   forceRejectPasswordChange,
+  verifyQrPayment,
+  getPendingQrPayments,
 } from "../controllers/admin.controller.js";
 import { createSong, deleteSong } from "../controllers/song.controller.js";
 import {
@@ -145,5 +147,8 @@ router.post(
   requireAdmin,
   forceRejectPasswordChange,
 );
+
+router.get("/qr-payments", protectRoute, requireAdmin, getPendingQrPayments);
+router.post("/qr-payments/:paymentId/verify", protectRoute, requireAdmin, verifyQrPayment);
 
 export default router;

@@ -6,6 +6,7 @@ import { Payment } from "../models/payment.model.js";
 import PasswordChangeRequest from "../models/passwordChangeRequest.model.js";
 import Notification from "../models/notification.model.js";
 import { clerkClient } from "@clerk/express";
+import { addToAdminWallet } from "./payment.controller.js";
 import crypto from "crypto";
 
 const IV_LENGTH = 16;
@@ -367,6 +368,136 @@ export const forceRejectPasswordChange = async (req, res, next) => {
     await request.save();
 
     res.status(200).json({ message: "Corrupted request cleared" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const PRICING = {
+  daily: { amount: 1, days: 1 },
+  monthly: { amount: 29, days: 30 },
+  yearly: { amount: 99, days: 365 },
+};
+
+export const getPendingQrPayments = async (req, res, next) => {
+  try {
+    const payments = await Payment.find({
+      paymentMethod: "qr",
+      status: "pending",
+    })
+      .populate("userId", "fullName email")
+      .sort({ createdAt: -1 });
+
+    const formatted = payments.map((p) => ({
+      _id: p._id,
+      orderId: p.cashfreeOrderId,
+      userName: p.userId?.fullName || "Unknown",
+      userEmail: p.userId?.email || "Unknown",
+      plan: p.plan,
+      amount: p.amount,
+      utrNumber: p.paymentProof,
+      createdAt: p.createdAt,
+    }));
+
+    res.status(200).json(formatted);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyQrPayment = async (req, res, next) => {
+  try {
+    const { paymentId } = req.params;
+    const { action } = req.body;
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    if (action === "approve") {
+      payment.status = "success";
+      payment.qrStatus = "verified";
+      await payment.save();
+
+      const expiryMs =
+        Date.now() + PRICING[payment.plan].days * 24 * 60 * 60 * 1000;
+      payment.subscriptionStart = new Date();
+      payment.subscriptionEnd = new Date(expiryMs);
+      await payment.save();
+
+      const user = await User.findOne({ clerkId: payment.clerkId });
+      if (user) {
+        user.isPremium = true;
+        user.subscriptionPlan = payment.plan;
+        user.subscriptionExpiry = new Date(expiryMs);
+        await user.save();
+
+        await addToAdminWallet(payment.amount, payment.plan, payment.cashfreeOrderId, {
+          fullName: user.fullName,
+          email: user.email,
+        });
+
+        const notification = new Notification({
+          userId: user._id,
+          clerkId: user.clerkId,
+          title: "Payment Verified",
+          message: `Your ${payment.plan} plan subscription has been activated!`,
+          type: "success",
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+        await notification.save();
+
+        global.broadcastEvent?.(
+          "payment-verified",
+          {
+            id: notification._id.toString(),
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            read: false,
+            createdAt: notification.createdAt.toISOString(),
+          },
+          user.clerkId,
+        );
+      }
+
+      res.status(200).json({ message: "Payment verified, subscription activated" });
+    } else if (action === "reject") {
+      payment.status = "failed";
+      payment.qrStatus = "rejected";
+      await payment.save();
+
+      const user = await User.findOne({ clerkId: payment.clerkId });
+      if (user) {
+        const notification = new Notification({
+          userId: user._id,
+          clerkId: user.clerkId,
+          title: "Payment Rejected",
+          message: "Your payment was rejected. Please contact admin.",
+          type: "error",
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+        await notification.save();
+
+        global.broadcastEvent?.(
+          "payment-rejected",
+          {
+            id: notification._id.toString(),
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            read: false,
+            createdAt: notification.createdAt.toISOString(),
+          },
+          user.clerkId,
+        );
+      }
+
+      res.status(200).json({ message: "Payment rejected" });
+    } else {
+      res.status(400).json({ message: "Invalid action" });
+    }
   } catch (error) {
     next(error);
   }

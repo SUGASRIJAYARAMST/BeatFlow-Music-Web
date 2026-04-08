@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { axiosInstance } from "../../lib/axios";
-import { CreditCard, TrendingUp, Users } from "lucide-react";
+import { CreditCard, TrendingUp, Users, QrCode, Check, X, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Payment {
     _id: string;
@@ -10,6 +11,10 @@ interface Payment {
     status: string;
     cashfreeOrderId: string;
     createdAt: string;
+    paymentMethod?: string;
+    paymentProof?: string;
+    userName?: string;
+    userEmail?: string;
 }
 
 interface Subscriber {
@@ -26,6 +31,8 @@ const AdminSubscriptions = () => {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
     const [totalRevenue, setTotalRevenue] = useState(0);
+    const [pendingQrPayments, setPendingQrPayments] = useState<Payment[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchSubscriptions();
@@ -42,6 +49,33 @@ const AdminSubscriptions = () => {
             setTotalRevenue(revenue);
         } catch (error) {
             console.error("Failed to fetch subscriptions", error);
+        }
+    };
+
+    const fetchPendingQrPayments = async () => {
+        try {
+            const res = await axiosInstance.get("/admin/qr-payments");
+            setPendingQrPayments(res.data);
+        } catch (error) {
+            console.error("Failed to fetch QR payments", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPendingQrPayments();
+    }, []);
+
+    const handleVerifyQrPayment = async (paymentId: string, action: "approve" | "reject") => {
+        setLoading(true);
+        try {
+            await axiosInstance.post(`/admin/qr-payments/${paymentId}/verify`, { action });
+            toast.success(action === "approve" ? "Payment approved!" : "Payment rejected");
+            fetchPendingQrPayments();
+            fetchSubscriptions();
+        } catch (error) {
+            toast.error("Failed to verify payment");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -130,6 +164,50 @@ const AdminSubscriptions = () => {
                     </div>
                 </div>
             </div>
+
+            {pendingQrPayments.length > 0 && (
+                <div className='mt-8 card bg-base-200 rounded-lg border border-base-100 p-6'>
+                    <div className='flex items-center gap-2 mb-4'>
+                        <QrCode className='size-5 text-purple-400' />
+                        <h2 className='text-lg font-semibold'>Pending QR Payments</h2>
+                        <span className='text-xs px-2 py-0.5 bg-yellow-500/10 text-yellow-400 rounded-full'>
+                            {pendingQrPayments.length} pending
+                        </span>
+                    </div>
+                    <div className='space-y-3'>
+                        {pendingQrPayments.map((p) => (
+                            <div key={p._id} className='flex items-center justify-between py-3 border border-base-100 rounded-lg p-4 bg-base-100/50'>
+                                <div>
+                                    <p className='text-sm font-medium'>{p.userName || p.clerkId}</p>
+                                    <p className='text-xs text-base-content/60'>{p.userEmail || "No email"}</p>
+                                    <p className='text-xs text-base-content/40 mt-1'>
+                                        {p.plan} plan • ₹{p.amount} • UTR: {p.paymentProof || "N/A"}
+                                    </p>
+                                    <p className='text-xs text-base-content/30'>
+                                        {new Date(p.createdAt).toLocaleString()}
+                                    </p>
+                                </div>
+                                <div className='flex gap-2'>
+                                    <button
+                                        onClick={() => handleVerifyQrPayment(p._id, "approve")}
+                                        disabled={loading}
+                                        className='p-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-colors'
+                                    >
+                                        {loading ? <Loader2 className='size-4 animate-spin' /> : <Check className='size-4' />}
+                                    </button>
+                                    <button
+                                        onClick={() => handleVerifyQrPayment(p._id, "reject")}
+                                        disabled={loading}
+                                        className='p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors'
+                                    >
+                                        <X className='size-4' />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

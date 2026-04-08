@@ -30,6 +30,7 @@ import notificationRoutes from "./routes/notification.route.js";
 import walletRoutes from "./routes/wallet.route.js";
 import sseRoutes, { broadcastEvent } from "./routes/sse.route.js";
 import pinResetRoutes from "./routes/pinReset.route.js";
+import feedbackRoutes from "./routes/feedback.route.js";
 import { protectRoute, requireAdmin } from "./middleware/auth.middleware.js";
 import {
   getPinResetRequests,
@@ -168,6 +169,7 @@ const startServer = async () => {
   app.use("/api/wallet", walletRoutes);
   app.use("/api/sse", sseRoutes);
   app.use("/api/pin-reset", pinResetRoutes);
+  app.use("/api/feedback", feedbackRoutes);
   app.get(
     "/api/admin/pin-requests",
     protectRoute,
