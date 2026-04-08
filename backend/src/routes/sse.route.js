@@ -6,7 +6,7 @@ const router = Router();
 
 const clients = new Map();
 const MAX_CONNECTIONS = 1000;
-const CONNECTION_TIMEOUT = 5 * 60 * 1000;
+const CONNECTION_TIMEOUT = 30 * 60 * 1000;
 
 const sseAuth = async (req, res, next) => {
   try {
