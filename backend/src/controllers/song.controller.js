@@ -265,16 +265,30 @@ export const createSong = async (req, res, next) => {
       });
     }
 
-    const {
-      title,
-      artist,
-      genre,
-      albumId,
-      duration,
-      isFeatured,
-      isTrending,
-      isPremium,
-    } = req.body;
+     const {
+       title,
+       artist,
+       genre,
+       albumId,
+       duration,
+       isFeatured,
+       isTrending,
+       isPremium,
+     } = req.body;
+
+     // Log the received data for debugging
+     console.log('Received song data:', {
+       title,
+       artist,
+       genre,
+       albumId,
+       duration,
+       isFeatured,
+       isTrending,
+       isPremium,
+       hasAudioFile: !!req.files?.audioFile,
+       hasImageFile: !!req.files?.imageFile
+     });
 
     const existingSong = await Song.findOne({
       title: { $regex: new RegExp(`^${title}$`, "i") },
@@ -307,34 +321,43 @@ export const createSong = async (req, res, next) => {
     // const allowedAudioTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a", "audio/aac", "audio/x-wav"];
     // const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 
-    const allowedAudioTypes = [
-      "audio/mpeg",
-      "audio/mp3",
-      "audio/ogg",
-      "audio/mp4",
-      "audio/x-m4a",
-      "audio/aac",
-    ];
+const allowedAudioTypes = [
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/ogg",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/aac",
+  "video/mp4" // Some browsers send MP4 as video
+];
 
-    const allowedImageTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-      "image/avif"
-    ];
+const allowedImageTypes = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+  "image/bmp",
+  "image/tiff"
+];
 
-    if (!allowedAudioTypes.includes(audioFile.mimetype)) {
-      return res.status(400).json({
-        message: `Invalid audio format (${audioFile.mimetype}). Use MP3, WAV, OGG, or M4A.`,
-      });
-    }
-    if (!allowedImageTypes.includes(imageFile.mimetype)) {
-      return res.status(400).json({
-        message: `Invalid image format (${imageFile.mimetype}). Use JPEG, PNG, WebP, or GIF.`,
-      });
-    }
+     console.log(`Checking audio file type: ${audioFile.mimetype}`);
+     console.log(`Allowed audio types: ${JSON.stringify(allowedAudioTypes)}`);
+     if (!allowedAudioTypes.includes(audioFile.mimetype)) {
+       return res.status(400).json({
+         message: `Invalid audio format (${audioFile.mimetype}). Allowed types: ${allowedAudioTypes.join(', ')}`,
+       });
+     }
+     console.log(`Checking image file type: ${imageFile.mimetype}`);
+     console.log(`Allowed image types: ${JSON.stringify(allowedImageTypes)}`);
+     if (!allowedImageTypes.includes(imageFile.mimetype)) {
+       return res.status(400).json({
+         message: `Invalid image format (${imageFile.mimetype}). Allowed types: ${allowedImageTypes.join(', ')}`,
+       });
+     }
 
     let audioDuration = parseInt(duration) || 0;
     if (!audioDuration) {
@@ -346,10 +369,20 @@ export const createSong = async (req, res, next) => {
       }
     }
 
-    const [audioUpload, imageUpload] = await Promise.all([
-      uploadToCloudinary(audioFile),
-      uploadToCloudinary(imageFile),
-    ]);
+     console.log('Starting file uploads to Cloudinary...');
+     try {
+       const [audioUpload, imageUpload] = await Promise.all([
+         uploadToCloudinary(audioFile),
+         uploadToCloudinary(imageFile),
+       ]);
+       console.log('File uploads successful:', { 
+         audioUrl: audioUpload.url, 
+         imageUrl: imageUpload.url 
+       });
+     } catch (uploadError) {
+       console.error('Cloudinary upload failed:', uploadError);
+       throw uploadError;
+     }
 
     const song = new Song({
       title,

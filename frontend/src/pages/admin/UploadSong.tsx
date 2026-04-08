@@ -79,7 +79,12 @@ const AdminUploadSong = () => {
             if (imageInputRef.current) imageInputRef.current.value = "";
         } catch (error: any) { 
             console.error("Upload error:", error);
-            toast.error(error.response?.data?.message || "Upload failed - please check file formats and try again");
+            // Show detailed error for debugging
+            const errorMessage = error.response?.data?.message 
+                || error.response?.data?.error 
+                || error.message 
+                || "Upload failed - please check file formats and try again";
+            toast.error(errorMessage);
             setUploadProgress(0);
         } finally { setIsUploading(false); }
     };
