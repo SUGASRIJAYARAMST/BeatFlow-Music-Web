@@ -7,31 +7,6 @@ import path from "path";
 
 import User from "../models/user.model.js";
 
-// const uploadToCloudinary = async (file) => {
-//     try {
-//         // Determine resource type based on file mimetype
-//         let resourceType = "video"; // Default for audio files
-//         if (file.mimetype.startsWith("image/")) {
-//             resourceType = "image";
-//         }
-
-//         const result = await cloudinary.uploader.upload(file.tempFilePath, {
-//             resource_type: resourceType
-//         });
-//         return {
-//             url: result.secure_url,
-//             publicId: result.public_id
-//         };
-//     } catch (error) {
-//         console.log("Error uploading to cloudinary", error);
-//         // Provide more specific error message for Cloudinary file size limits
-//         if (error.message && error.message.includes("File size too large")) {
-//             throw new Error("File exceeds Cloudinary's limit (10MB for free accounts). Please compress your file or upgrade your Cloudinary plan.");
-//         }
-//         throw new Error("Error uploading to cloudinary");
-//     }
-// };
-
 const uploadToCloudinary = async (file) => {
   try {
     // Determine resource type based on file mimetype
@@ -44,30 +19,54 @@ const uploadToCloudinary = async (file) => {
     const result = await cloudinary.uploader.upload(file.tempFilePath, {
       resource_type: resourceType,
       folder: resourceType === "video" ? "songs" : "images",
+      // Use eager transformations for better performance
+      eager: [
+        { transformation: [{ quality: "auto", bit_rate: "128k" }, { fetch_format: "auto" }] }
+      ],
+      eager_async: true
     });
 
-    // const optimizedUrl =
-    //   resourceType === "video"
-    //     ? result.secure_url.replace("/upload/", "/upload/f_mp3,br_128k,q_auto/")
-    //     : result.secure_url;
-
     const optimizedUrl =
-  resourceType === "video"
-    ? cloudinary.url(result.public_id, {
-        resource_type: "video",
-        format: "mp3",
-        transformation: [
-          { quality: "auto", bit_rate: "128k" },
-          { fetch_format: "auto" }
-        ],
-        flags: "streaming_attachment"
-      })
-    : result.secure_url;
+      resourceType === "video"
+        ? cloudinary.url(result.public_id, {
+            resource_type: "video",
+            format: "mp3",
+            transformation: [
+              { quality: "auto", bit_rate: "128k" },
+              { fetch_format: "auto" }
+            ],
+            flags: "streaming_attachment"
+          })
+        : result.secure_url;
 
     return {
       url: optimizedUrl,
       publicId: result.public_id,
     };
+  } catch (error) {
+    console.error("Error uploading to cloudinary:", error);
+
+    if (error.message && error.message.includes("File size too large")) {
+      throw new Error(
+        "File exceeds Cloudinary's limit (10MB for free accounts). Please compress your file or upgrade your Cloudinary plan.",
+      );
+    }
+
+    throw new Error("Error uploading to cloudinary");
+  }
+};
+  } catch (error) {
+    console.error("Error uploading to cloudinary:", error);
+
+    if (error.message && error.message.includes("File size too large")) {
+      throw new Error(
+        "File exceeds Cloudinary's limit (10MB for free accounts). Please compress your file or upgrade your Cloudinary plan.",
+      );
+    }
+
+    throw new Error("Error uploading to cloudinary");
+  }
+};
   } catch (error) {
     console.log("Error uploading to cloudinary", error);
 
@@ -474,7 +473,11 @@ export const search = async (req, res, next) => {
     const cached = global.cache?.get(cacheKey);
     if (cached) return res.status(200).json(cached);
 
-    const sanitizedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Trim query to prevent issues with whitespace-only searches
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return res.status(200).json({ songs: [], albums: [] });
+
+    const sanitizedQuery = trimmedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const [songs, albums] = await Promise.all([
       Song.find(
