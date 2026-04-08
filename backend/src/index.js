@@ -73,7 +73,11 @@ const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",")
   : [
       "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
       "http://localhost:3004",
+      "http://localhost:5176",
       "https://beatflow-music-web.vercel.app",
     ];
 
