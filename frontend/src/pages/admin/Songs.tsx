@@ -18,7 +18,7 @@ const AdminSongs = () => {
   const [formData, setFormData] = useState<Song>({
     _id: "",
     title: "",
-    artist: "",
+    artist: "" ,
     genre: "Other",
     albumId: null,
     imageUrl: "",

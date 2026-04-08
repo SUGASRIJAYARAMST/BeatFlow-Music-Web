@@ -16,7 +16,7 @@ const AdminOffer = () => {
         fetchOffer();
     }, []);
 
-    const fetchOffer = async () => {
+    const fetchOffer = async () =>  {
         try {
             const res = await axiosInstance.get("/admin/offer");
             if (res.data) {

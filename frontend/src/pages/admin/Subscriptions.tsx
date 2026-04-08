@@ -19,7 +19,7 @@ interface Payment {
 
 interface Subscriber {
     _id: string;
-    fullName: string;
+    fullName: string ;
     clerkId: string;
     subscriptionPlan: string;
     subscriptionExpiry: string | null;

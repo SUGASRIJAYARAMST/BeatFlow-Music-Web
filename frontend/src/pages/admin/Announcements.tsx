@@ -18,7 +18,7 @@ const ANNOUNCEMENT_TYPES = [
 
 const AdminAnnouncements = () => {
     const { announcements, fetchAnnouncements, createAnnouncement, deleteAnnouncement } = useAnnouncementStore();
-    const [showCreate, setShowCreate] = useState(false);
+    const [showCreate, setShowCreate] = useState(false) ;
     const [isCreating, setIsCreating] = useState(false);
     const [form, setForm] = useState({ title: "", content: "", type: "info" });
     const [deleteId, setDeleteId] = useState<string | null>(null);

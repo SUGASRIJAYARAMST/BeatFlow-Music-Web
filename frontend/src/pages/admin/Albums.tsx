@@ -55,7 +55,7 @@ const AdminAlbums = () => {
     setFormData({
       ...album,
       _id: album._id || "",
-      title: album.title || "",
+      title: album.title || "" ,
       artist: album.artist || "",
       genre: album.genre || "Other",
       releaseYear: album.releaseYear || 0,

@@ -286,7 +286,7 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
                                         onClick={(e) => handleSelectPlaylist(playlist._id, e)}
                                         className='w-full text-left px-3 py-2 rounded-md hover:bg-white/5 transition-colors text-sm truncate flex items-center justify-between'
                                     >
-                                        <span className='truncate'>{playlist.name}</span>
+                                        <span className='truncate'>{playlist.name}</span >
                                         {isInPlaylist ? (
                                             <span className='text-xs text-emerald-400 shrink-0 ml-2'>Added</span>
                                         ) : (

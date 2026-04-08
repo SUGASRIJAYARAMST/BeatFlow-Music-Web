@@ -21,7 +21,7 @@ const AdminFeedback = () => {
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchFeedbacks();
+        fetchFeedbacks() ;
     }, []);
 
     const fetchFeedbacks = async () => {

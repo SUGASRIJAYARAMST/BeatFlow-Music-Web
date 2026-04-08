@@ -8,7 +8,7 @@ interface Props {
 interface State {
     hasError: boolean;
     error: Error | null;
-    canReload: boolean;
+    canReload: boolean ;
     countdown: number;
 }
 

@@ -16,7 +16,7 @@ const AudioPlayer = () => {
 
     const {
         currentSong,
-        isPlaying: storeIsPlaying,
+        isPlaying: storeIsPlaying ,
         volume,
         isMuted,
         currentTime,

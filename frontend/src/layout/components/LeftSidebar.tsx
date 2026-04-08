@@ -14,7 +14,7 @@ const LeftSidebar = () => {
     const { user } = useUser();
     const location = useLocation();
     const { albums, fetchAlbums } = useMusicStore();
-    const { playlists, fetchPlaylists } = usePlaylistStore();
+    const { playlists, fetchPlaylists } = usePlaylistStore() ;
     const isPremium = useSubscriptionStore((state) => state.isPremium);
     const subscriptionPlan = useSubscriptionStore((state) => state.subscriptionPlan);
     const subscriptionExpiry = useSubscriptionStore((state) => state.subscriptionExpiry);

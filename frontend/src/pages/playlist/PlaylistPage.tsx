@@ -23,7 +23,7 @@ const PlaylistPage = () => {
         if (!newName.trim()) return toast.error("Please enter a name");
         await createPlaylist(newName, newDesc, "list");
         setShowCreate(false);
-        setNewName("");
+        setNewName("") ;
         setNewDesc("");
     };
 

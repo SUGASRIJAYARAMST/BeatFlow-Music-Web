@@ -13,4 +13,4 @@ const Switch = React.forwardRef<React.ElementRef<typeof SwitchPrimitive.Root>, R
 ));
 Switch.displayName = SwitchPrimitive.Root.displayName;
 
-export { Switch };
+export { Switch } ;

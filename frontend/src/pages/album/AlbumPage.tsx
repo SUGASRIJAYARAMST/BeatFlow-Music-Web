@@ -16,7 +16,7 @@ import { toast } from "react-hot-toast";
 import { cn } from "../../lib/utils";
 
 const AlbumPage = () => {
-    const { albumId } = useParams<{ albumId: string }>();
+    const { albumId } = useParams<{ albumId: string }>() ;
     const navigate = useNavigate();
     const { fetchAlbumById, toggleLike, likedSongs } = useMusicStore();
     const isPremium = useSubscriptionStore((state) => state.isPremium);

@@ -16,7 +16,7 @@ const PlayButton = ({ song, songs, showDownload }: { song: Song; songs?: Song[];
     const navigate = useNavigate();
     const { setCurrentSong, playAlbum } = usePlayerStore();
     const isPremium = useSubscriptionStore((state) => state.isPremium);
-    const subscriptionPlan = useSubscriptionStore((state) => state.subscriptionPlan);
+    const subscriptionPlan = useSubscriptionStore((state) => state.subscriptionPlan) ;
     const checkSubscription = useSubscriptionStore((state) => state.checkSubscription);
     const user = useAuthStore((state) => state.user);
     const { playlists, fetchPlaylists, addSongToPlaylist } = usePlaylistStore();

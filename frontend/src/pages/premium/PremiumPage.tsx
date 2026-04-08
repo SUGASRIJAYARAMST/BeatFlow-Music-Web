@@ -675,7 +675,7 @@ const ProPage = () => {
                                     Try Again
                                 </Button>
                             </div>
-                        )}
+                        ) }
                     </div>
                 </div>
             )}

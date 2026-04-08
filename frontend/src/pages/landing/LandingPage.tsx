@@ -19,7 +19,7 @@ const TiltCard = ({ children, className = "" }: { children: React.ReactNode; cla
     }, []);
     const handleMouseLeave = useCallback(() => {
         setStyle({ transform: "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)" });
-    }, []);
+    }, []) ;
     return (
         <div ref={ref} className={className} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} style={{ transition: "transform 0.3s ease", ...style }}>
             {children}

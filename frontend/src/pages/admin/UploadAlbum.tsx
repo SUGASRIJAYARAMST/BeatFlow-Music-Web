@@ -20,7 +20,7 @@ const AdminUploadAlbum = () => {
     const [songs, setSongs] = useState<SongEntry[]>([{ title: "", duration: null, imageFile: null }]);
     const [audioFiles, setAudioFiles] = useState<(File | null)[]>([null]);
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadProgress, setUploadProgress] = useState(0) ;
     const audioInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const imageInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 

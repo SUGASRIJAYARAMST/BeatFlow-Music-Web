@@ -14,7 +14,7 @@ const AuthCallbackPage = () => {
             try {
                 await axiosInstance.post("/auth/callback", {
                     id: user.id,
-                    firstName: user.firstName,
+                    firstName: user.firstName ,
                     lastName: user.lastName,
                     imageUrl: user.imageUrl,
                     primaryEmail: user.primaryEmailAddress?.emailAddress,

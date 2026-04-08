@@ -21,7 +21,7 @@ const WalletPage = () => {
     const [showAddMoney, setShowAddMoney] = useState(false);
     const [amount, setAmount] = useState("");
     const [pin, setPinState] = useState("");
-    const [pinError, setPinError] = useState("");
+    const [pinError, setPinError] = useState("") ;
     const [addStep, setAddStep] = useState<AddStep>("setup");
     const [hasPin, setHasPin] = useState<boolean | null>(null);
     const [modalType, setModalType] = useState<ModalType>(null);

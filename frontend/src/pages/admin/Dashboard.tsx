@@ -199,7 +199,7 @@ const AdminDashboard = () => {
                             )}
                         </button>
                     </div>
-                    {offer ? (
+                    {offer ?  (
                         <div className="bg-base-200/50 rounded-lg p-4">
                             <p className="text-2xl font-bold text-emerald-400">{offer.discount}% OFF</p>
                             <p className="text-sm text-base-content/60 mt-1">

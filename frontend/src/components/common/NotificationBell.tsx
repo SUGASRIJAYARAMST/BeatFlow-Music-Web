@@ -118,7 +118,7 @@ const NotificationBell = () => {
                         )}
                     </div>
 
-                    <div className="overflow-y-auto max-h-80">
+                    <div className="overflow-y-auto max-h-80" >
                         {notifications.length === 0 ? (
                             <div className="p-6 text-center">
                                 <Bell className="size-8 mx-auto text-base-content/30 mb-2" />

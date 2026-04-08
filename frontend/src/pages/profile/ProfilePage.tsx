@@ -21,7 +21,7 @@ interface PasswordRequest {
     status: "pending" | "approved" | "rejected";
     createdAt: string;
     approvedAt: string | null;
-    expiresAt: string | null;
+    expiresAt: string | null ;
 }
 
 const getRemainingTime = (expiryTimestamp: number) => {

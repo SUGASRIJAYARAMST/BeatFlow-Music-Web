@@ -23,7 +23,7 @@ const GENRE_COLORS = [
 
 const GENRE_ICONS = [Disc, Mic2, Radio, Waves, Bird, Album, TreeDeciduous, Guitar, Drum, Sparkles, Music];
 
-const SearchPage = () => {
+const SearchPage = () =>  {
     const [query, setQuery] = useState("");
     const { searchResults, search, isLoading } = useMusicStore();
     const { t } = useLanguageStore();

@@ -22,7 +22,7 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
         </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
 ));
-SelectContent.displayName = SelectPrimitive.Content.displayName;
+SelectContent.displayName = SelectPrimitive.Content.displayName ;
 
 const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item>, React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>>(({ className, children, ...props }, ref) => (
     <SelectPrimitive.Item ref={ref} className={cn("relative flex w-full cursor-pointer select-none items-center rounded py-2.5 pl-10 pr-4 text-sm outline-none hover:bg-emerald-500/20 hover:text-emerald-400 focus:bg-emerald-500/20 focus:text-emerald-400 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 cursor-pointer", className)} {...props}>

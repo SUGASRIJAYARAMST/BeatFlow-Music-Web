@@ -23,7 +23,7 @@ const AdminUsers = () => {
         if (plan === "daily") date.setDate(date.getDate() + 1);
         else if (plan === "monthly") date.setMonth(date.getMonth() + 1);
         else if (plan === "yearly") date.setFullYear(date.getFullYear() + 1);
-        return date.toISOString().split("T")[0];
+        return date.toISOString().split("T")[0] ;
     };
 
     useEffect(() => { fetchUsers(); }, []);

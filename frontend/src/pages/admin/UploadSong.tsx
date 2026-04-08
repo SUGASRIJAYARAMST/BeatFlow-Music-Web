@@ -92,7 +92,7 @@ const AdminUploadSong = () => {
                     <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Title *</label>
                     <Input required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Song title" className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2"> 
                     <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Artist *</label>
                     <Input required value={formData.artist} onChange={(e) => setFormData({ ...formData, artist: e.target.value })} placeholder="Artist name" className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" />
                 </div>

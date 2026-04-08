@@ -35,7 +35,7 @@ export const PlaybackControls = () => {
         setVolume(percent);
     };
 
-    const handleMobileProgressTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    const handleMobileProgressTouch = (e: React.TouchEvent<HTMLDivElement>) =>  {
         if (!mobileProgressRef.current || !duration || !e.touches[0]) return;
         const rect = mobileProgressRef.current.getBoundingClientRect();
         const p = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));

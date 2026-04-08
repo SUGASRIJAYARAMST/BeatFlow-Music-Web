@@ -6,11 +6,11 @@ import { useNavigate } from "react-router-dom";
 const AD_DURATION = 10;
 
 const PRO_FEATURES = [
-    "Ad-free listening",
+    "Ad-free listening" , 
     "Play songs in any order",
     "Download songs",
     "High quality audio",
-    "Priority support",
+    "Priority support",  
     "Offline playback",
     "Exclusive badges",
     "Early access to new features",

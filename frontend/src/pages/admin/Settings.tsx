@@ -14,7 +14,7 @@ const AdminSettings = () => {
     const { user } = useUser();
     const clerk = useClerk();
     const navigate = useNavigate();
-    const { fetchUserProfile } = useAuthStore();
+    const { fetchUserProfile } = useAuthStore() ;
     const [clearingCache, setClearingCache] = useState(false);
     const [editingName, setEditingName] = useState(false);
     const [newName, setNewName] = useState(user?.fullName || "");

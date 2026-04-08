@@ -18,7 +18,7 @@ function getReloadData(): { count: number; timestamp: number } {
     }
 }
 
-function setReloadData(count: number) {
+function setReloadData(count: number)  {
     try {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ count, timestamp: Date.now() }));
     } catch {}

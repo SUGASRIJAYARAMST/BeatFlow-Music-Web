@@ -20,7 +20,7 @@ const Heading = ({
     case 1: Tag = "h1"; break;
     case 2: Tag = "h2"; break;
     case 3: Tag = "h3"; break;
-    case 4: Tag = "h4"; break;
+    case 4: Tag = "h4"; break ;
     case 5: Tag = "h5"; break;
     case 6: Tag = "h6"; break;
   }

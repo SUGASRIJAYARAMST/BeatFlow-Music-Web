@@ -15,7 +15,7 @@ interface PasswordRequest {
     createdAt: string;
 }
 
-const AdminPasswordRequests = () => {
+const AdminPasswordRequests = () =>  {
     const [requests, setRequests] = useState<PasswordRequest[]>([]);
     const [loading, setLoading] = useState(false);
     const [confirmApprove, setConfirmApprove] = useState<string | null>(null);

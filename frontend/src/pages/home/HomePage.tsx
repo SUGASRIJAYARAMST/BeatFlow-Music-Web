@@ -16,7 +16,7 @@ import { formatDuration, optimizeImage } from "../../lib/utils";
 import toast from "react-hot-toast";
 
 const SongCardSkeleton = () => (<div className='glass-dark p-4 rounded-3xl animate-pulse'><div className='w-full aspect-square bg-white/5 rounded-2xl mb-4' /><div className='h-4 bg-white/5 rounded w-3/4 mb-2' /><div className='h-3 bg-white/5 rounded w-1/2' /></div>);
-const ListItemSkeleton = () => (<div className='flex items-center gap-4 px-4 py-3 animate-pulse'><div className='size-6 bg-white/5 rounded' /><div className='size-10 bg-white/5 rounded' /><div className='flex-1'><div className='h-4 bg-white/5 rounded w-1/3 mb-2' /><div className='h-3 bg-white/5 rounded w-1/4' /></div></div>);
+const ListItemSkeleton =  () => (<div className='flex items-center gap-4 px-4 py-3 animate-pulse'><div className='size-6 bg-white/5 rounded' /><div className='size-10 bg-white/5 rounded' /><div className='flex-1'><div className='h-4 bg-white/5 rounded w-1/3 mb-2' /><div className='h-3 bg-white/5 rounded w-1/4' /></div></div>);
 
 const HomePage = () => {
     const { 
