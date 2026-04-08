@@ -55,30 +55,6 @@ const uploadToCloudinary = async (file) => {
     throw new Error("Error uploading to cloudinary");
   }
 };
-  } catch (error) {
-    console.error("Error uploading to cloudinary:", error);
-
-    if (error.message && error.message.includes("File size too large")) {
-      throw new Error(
-        "File exceeds Cloudinary's limit (10MB for free accounts). Please compress your file or upgrade your Cloudinary plan.",
-      );
-    }
-
-    throw new Error("Error uploading to cloudinary");
-  }
-};
-  } catch (error) {
-    console.log("Error uploading to cloudinary", error);
-
-    if (error.message && error.message.includes("File size too large")) {
-      throw new Error(
-        "File exceeds Cloudinary's limit (10MB for free accounts). Please compress your file or upgrade your Cloudinary plan.",
-      );
-    }
-
-    throw new Error("Error uploading to cloudinary");
-  }
-};
 const checkSongAccess = async (song, clerkId) => {
   if (!song.isPremium) return true;
   if (!clerkId) return false;
