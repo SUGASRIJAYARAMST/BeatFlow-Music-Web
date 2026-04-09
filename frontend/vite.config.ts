@@ -15,7 +15,7 @@ export default defineConfig({
     open: true,
     proxy: {
       "/api": {
-        target: "https://beatflow-music-web.onrender.com",
+        target: "http://localhost:5000",
         changeOrigin: true,
       },
     },

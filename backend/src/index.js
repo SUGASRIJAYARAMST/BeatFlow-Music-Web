@@ -78,7 +78,7 @@ const allowedOrigins = process.env.CLIENT_URL
       "http://localhost:5175",
       "http://localhost:3004",
       "http://localhost:5176",
-      "https://beatflow-music-web.vercel.app",
+      "https://beatflow-26.vercel.app",
     ];
 
 const startServer = async () => {
