@@ -3,12 +3,31 @@ import User from "../models/user.model.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    const { userId } = getAuth(req);
+    let userId = req.userId;
+    
     if (!userId) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized - No userId found" });
+      const auth = getAuth(req);
+      userId = auth?.userId;
     }
+    
+    if (!userId) {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith("Bearer ")) {
+        try {
+          const { decode } = await import("jwt-decode");
+          const token = authHeader.slice(7);
+          const decoded = decode(token);
+          userId = decoded?.sub || decoded?.userId;
+        } catch (e) {
+          console.log("Token decode error:", e.message);
+        }
+      }
+    }
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized - No userId found" });
+    }
+
     req.userId = userId;
     const user = await User.findOne({ clerkId: userId }).lean();
     req.user = user;
