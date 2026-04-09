@@ -75,6 +75,15 @@ router.put("/read-all", protectRoute, async (req, res) => {
   }
 });
 
+router.delete("/clear-all", protectRoute, async (req, res) => {
+  try {
+    await Notification.deleteMany({ clerkId: req.userId });
+    res.status(200).json({ message: "All notifications cleared" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to clear notifications" });
+  }
+});
+
 router.delete("/:id", protectRoute, async (req, res) => {
   try {
     await Notification.findOneAndDelete({

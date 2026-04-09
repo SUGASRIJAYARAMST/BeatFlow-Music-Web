@@ -113,8 +113,14 @@ export const useNotificationStore = create<NotificationStore>()(
                 }
             },
 
-            clearNotifications: () => {
-                set({ notifications: [] });
+            clearNotifications: async () => {
+                try {
+                    await axiosInstance.delete("/notifications/clear-all");
+                    set({ notifications: [] });
+                } catch (error) {
+                    console.error("Failed to clear notifications", error);
+                    set({ notifications: [] });
+                }
             },
 
             removeNotification: async (id) => {
