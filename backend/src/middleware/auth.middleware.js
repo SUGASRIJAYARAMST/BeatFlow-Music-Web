@@ -12,6 +12,7 @@ export const protectRoute = async (req, res, next) => {
     req.userId = userId;
     const user = await User.findOne({ clerkId: userId }).lean();
     req.user = user;
+    req.userEmail = user?.email;
     next();
   } catch (error) {
     console.log("ProtectRoute Error:", error);
@@ -21,13 +22,13 @@ export const protectRoute = async (req, res, next) => {
 
 export const requireAdmin = async (req, res, next) => {
   try {
-    if (process.env.ADMIN_EMAIL && req.user?.email === process.env.ADMIN_EMAIL) {
+    const isAdminEmail = req.userEmail === process.env.ADMIN_EMAIL;
+    const isAdminRole = req.user?.role === "admin";
+    
+    if (isAdminEmail || isAdminRole) {
       return next();
     }
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Unauthorized - Not admin" });
-    }
-    next();
+    return res.status(403).json({ message: "Unauthorized - Not admin" });
   } catch (error) {
     console.log("RequireAdmin Error:", error);
     next(error);
