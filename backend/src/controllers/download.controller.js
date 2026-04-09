@@ -37,11 +37,19 @@ export const downloadSong = async (req, res, next) => {
         downloadUrl = downloadUrl.substring(0, queryIndex);
       }
     }
+    
     if (downloadUrl.includes("/upload/")) {
-      const parts = downloadUrl.split("/upload/");
-      if (parts[1] && parts[1].includes(",")) {
-        downloadUrl = parts[0] + "/upload/" + parts[1].split(",")[0];
+      const uploadIndex = downloadUrl.indexOf("/upload/");
+      let afterUpload = downloadUrl.substring(uploadIndex + 9);
+      
+      if (afterUpload.includes(",")) {
+        afterUpload = afterUpload.split(",")[0];
       }
+      if (afterUpload.includes("?")) {
+        afterUpload = afterUpload.split("?")[0];
+      }
+      
+      downloadUrl = downloadUrl.substring(0, uploadIndex + 9) + afterUpload;
     }
     
     const fileName = `${song.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_beatflow.mp3`;
