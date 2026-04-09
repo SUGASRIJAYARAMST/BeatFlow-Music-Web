@@ -30,7 +30,7 @@ const AdminUsers = () => {
     const fetchUsers = async () => { try { const res = await axiosInstance.get("/admin/users"); setUsers(res.data.users || res.data); } catch (error) { console.error("Failed to fetch users", error); } };
     const deleteUser = async (userId: string, userName: string) => { 
         setConfirmAction({ type: "delete", userId, userName });
-        setShowConfirm(true);
+        setShowConfirm(true) ;
     };
     const handleTogglePremium = (userId: string, currentStatus: boolean, userName: string) => {
         const plan = "monthly";
