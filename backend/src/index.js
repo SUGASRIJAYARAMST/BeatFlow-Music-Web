@@ -85,7 +85,10 @@ const startServer = async () => {
   app.use(compression({ level: 6 }));
   app.use(generalLimiter);
 
-  const allowedOrigins = ["https://beatflow-26.vercel.app"];
+  const allowedOrigins = [
+    "https://beatflow-26.vercel.app",
+    "https://beatflow-5hmlrw609-sugasrijayaramsts-projects.vercel.app"
+  ];
 
   app.use(
     cors({
@@ -93,7 +96,7 @@ const startServer = async () => {
         // allow requests with no origin (mobile apps, curl, postman)
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin) || origin.startsWith("https://beatflow-")) {
           return callback(null, true);
         } else {
           return callback(new Error("Not allowed by CORS"));
