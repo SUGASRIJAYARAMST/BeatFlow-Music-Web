@@ -1,6 +1,6 @@
 import { Song } from "../models/song.model.js";
 import User from "../models/user.model.js";
-import axios from "axios";
+import cloudinary from "../config/cloudinary.js";
 
 export const downloadSong = async (req, res, next) => {
   try {
@@ -30,18 +30,18 @@ export const downloadSong = async (req, res, next) => {
       await user.save();
     }
 
-    const response = await axios({
-      method: "get",
-      url: song.audioUrl,
-      responseType: "stream",
-    });
-
+    const publicId = song.audioPublicId || song.audioUrl.split("/").slice(-2).join("/").split(".")[0];
     const fileName = `${song.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_beatflow.mp3`;
 
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.setHeader("Content-Type", "audio/mpeg");
+    const signedUrl = cloudinary.url(publicId, {
+      resource_type: "video",
+      secure: true,
+      sign_url: true,
+      type: "authenticated",
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    });
 
-    response.data.pipe(res);
+    res.redirect(signedUrl);
   } catch (error) {
     console.error("Download error:", error);
     next(error);
