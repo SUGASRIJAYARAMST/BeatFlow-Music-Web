@@ -103,36 +103,26 @@ export const deletePlaylist = async (req, res, next) => {
 export const addSongToPlaylist = async (req, res, next) => {
   try {
     const { songId } = req.body;
-    console.log(
-      "Add song to playlist - playlistId:",
-      req.params.id,
-      "songId:",
-      songId,
-    );
+    if (!songId) return res.status(400).json({ message: "songId required" });
+
     const user = await User.findOne({ clerkId: req.userId });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const playlist = user.playlists.id(req.params.id);
-    if (!playlist)
-      return res.status(404).json({ message: "Playlist not found" });
+    if (!playlist) return res.status(404).json({ message: "Playlist not found" });
 
     const exists = playlist.songs.some((s) => s.toString() === songId);
-    if (exists)
-      return res.status(400).json({ message: "Song already in playlist" });
+    if (exists) return res.status(400).json({ message: "Song already in playlist" });
 
     playlist.songs.push(songId);
     await user.save();
-    console.log("Song added. Total songs in playlist:", playlist.songs.length);
 
-    const updated = await User.findOne({ clerkId: req.userId }).populate(
-      "playlists.songs",
-    );
-    res
-      .status(200)
-      .json({
-        message: "Song added",
-        playlist: updated.playlists.id(req.params.id).toObject(),
-      });
+    const updated = await User.findOne({ clerkId: req.userId })
+      .populate("playlists.songs")
+      .lean();
+    
+    const playlistObj = updated.playlists.id(req.params.id);
+    res.status(200).json({ message: "Song added", playlist: playlistObj });
   } catch (error) {
     console.error("Add song error:", error);
     next(error);

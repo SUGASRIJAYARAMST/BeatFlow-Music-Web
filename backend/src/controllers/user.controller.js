@@ -348,15 +348,15 @@ export const toggleLike = async (req, res, next) => {
     const user = await User.findOne({ clerkId: req.userId });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const index = user.likedSongs.findIndex((id) => id.toString() === songId);
-    if (index > -1) {
-      user.likedSongs.splice(index, 1);
-    } else {
-      user.likedSongs.push(songId);
-    }
+    const isLiked = user.likedSongs.some((id) => id.toString() === songId);
+    
+    const update = isLiked
+      ? { $pull: { likedSongs: songId } }
+      : { $addToSet: { likedSongs: songId } };
 
-    await user.save();
-    res.status(200).json({ success: true, isLiked: index === -1 });
+    await User.findOneAndUpdate({ clerkId: req.userId }, update, { new: true });
+    
+    res.status(200).json({ success: true, isLiked: !isLiked });
   } catch (error) {
     next(error);
   }

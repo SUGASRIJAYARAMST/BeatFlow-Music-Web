@@ -8,50 +8,43 @@ export const downloadSong = async (req, res, next) => {
 
     if (!clerkId) return res.status(401).json({ message: "Unauthorized" });
 
-    const song = await Song.findById(songId);
-    if (!song) return res.status(404).json({ message: "Song not found" });
+    const [song, user] = await Promise.all([
+      Song.findById(songId).lean(),
+      User.findOne({ clerkId }).lean(),
+    ]);
 
-    const user = await User.findOne({ clerkId });
+    if (!song) return res.status(404).json({ message: "Song not found" });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const isYearlyPremium =
-      user.isPremium && user.subscriptionPlan === "yearly";
     const isOwner = user.role === "admin";
+    const isAnnualPro = user.isPremium && user.subscriptionPlan === "yearly";
 
-    if (!isYearlyPremium && !isOwner) {
-      return res
-        .status(403)
-        .json({ message: "Yearly Pro plan required to download songs" });
+    if (!isOwner && !isAnnualPro) {
+      return res.status(403).json({ message: "Yearly Pro plan required" });
     }
 
-    if (!user.purchasedSongs.includes(songId)) {
-      user.purchasedSongs.push(songId);
-      await user.save();
+    if (!user.purchasedSongs?.includes(songId)) {
+      await User.findOneAndUpdate(
+        { clerkId },
+        { $addToSet: { purchasedSongs: songId } },
+      );
     }
 
     let downloadUrl = song.audioUrl;
     if (downloadUrl.includes("/authenticated/")) {
       downloadUrl = downloadUrl.replace("/video/authenticated/", "/video/upload/");
       const queryIndex = downloadUrl.indexOf("?_a=");
-      if (queryIndex > -1) {
-        downloadUrl = downloadUrl.substring(0, queryIndex);
-      }
+      if (queryIndex > -1) downloadUrl = downloadUrl.substring(0, queryIndex);
     }
-    
+
     if (downloadUrl.includes("/upload/")) {
       const uploadIndex = downloadUrl.indexOf("/upload/");
       let afterUpload = downloadUrl.substring(uploadIndex + 9);
-      
-      if (afterUpload.includes(",")) {
-        afterUpload = afterUpload.split(",")[0];
-      }
-      if (afterUpload.includes("?")) {
-        afterUpload = afterUpload.split("?")[0];
-      }
-      
+      if (afterUpload.includes(",")) afterUpload = afterUpload.split(",")[0];
+      if (afterUpload.includes("?")) afterUpload = afterUpload.split("?")[0];
       downloadUrl = downloadUrl.substring(0, uploadIndex + 9) + afterUpload;
     }
-    
+
     const fileName = `${song.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_beatflow.mp3`;
 
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
@@ -68,10 +61,9 @@ export const getDownloadedSongs = async (req, res, next) => {
     const clerkId = req.userId;
     if (!clerkId) return res.status(401).json({ message: "Unauthorized" });
 
-    const user = await User.findOne({ clerkId }).populate({
-      path: "purchasedSongs",
-      options: { sort: { createdAt: -1 } },
-    });
+    const user = await User.findOne({ clerkId })
+      .populate({ path: "purchasedSongs" })
+      .lean();
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.status(200).json({ purchasedSongs: user.purchasedSongs });

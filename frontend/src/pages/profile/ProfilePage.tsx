@@ -1088,7 +1088,7 @@ const ProfilePage = () => {
                                             {language === "en" ? "English" : language === "hi" ? "हिन्दी" : language === "ta" ? "தமிழ்" : "తెలుగు"}
                                         </button>
                                         {showLangDropdown && (
-                                            <div ref={langDropdownRef} className="absolute right-0 top-full mt-2 w-48 bg-[#141414] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50">
+                                            <div ref={langDropdownRef} className="absolute right-0 top-full mt-2 w-32 bg-[#141414] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50">
                                                 {[
                                                     { value: "en", label: "English", native: "English" },
                                                     { value: "hi", label: "हिन्दी", native: "Hindi" },

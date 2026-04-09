@@ -92,11 +92,14 @@ const SONG_LIST_FIELDS =
 
 export const getAllSongs = async (req, res, next) => {
   try {
-    res.setHeader("Cache-Control", "public, max-age=300");
+    const cacheKey = "all_songs";
+    const cached = global.cache?.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
 
     const songs = await Song.find({})
       .select(SONG_LIST_FIELDS)
       .sort({ createdAt: -1 })
+      .limit(100)
       .lean();
 
     const optimizedSongs = songs.map((song) => ({
@@ -106,7 +109,9 @@ export const getAllSongs = async (req, res, next) => {
         : song.audioUrl?.replace("/upload/", "/upload/f_mp3,br_128k,q_auto/"),
     }));
 
-    res.status(200).json({ songs: optimizedSongs });
+    const result = { songs: optimizedSongs };
+    global.cache?.set(cacheKey, result, 120);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -114,18 +119,17 @@ export const getAllSongs = async (req, res, next) => {
 
 export const getFeaturedSongs = async (req, res, next) => {
   try {
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate, proxy-revalidate",
-    );
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
+    const cacheKey = "featured_songs";
+    const cached = global.cache?.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
 
     const songs = await Song.find({ isFeatured: true })
       .select(SONG_LIST_FIELDS)
       .sort({ createdAt: -1 })
       .limit(6)
       .lean();
+
+    global.cache?.set(cacheKey, songs, 120);
     res.status(200).json(songs);
   } catch (error) {
     next(error);
@@ -134,18 +138,17 @@ export const getFeaturedSongs = async (req, res, next) => {
 
 export const getMadeForYouSongs = async (req, res, next) => {
   try {
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate, proxy-revalidate",
-    );
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
+    const cacheKey = "made_for_you";
+    const cached = global.cache?.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
 
     const songs = await Song.find({})
       .select(SONG_LIST_FIELDS)
       .sort({ createdAt: -1 })
       .limit(8)
       .lean();
+
+    global.cache?.set(cacheKey, songs, 120);
     res.status(200).json(songs);
   } catch (error) {
     next(error);
@@ -154,18 +157,17 @@ export const getMadeForYouSongs = async (req, res, next) => {
 
 export const getTrendingSongs = async (req, res, next) => {
   try {
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate, proxy-revalidate",
-    );
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
+    const cacheKey = "trending_songs";
+    const cached = global.cache?.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
 
     const songs = await Song.find({ isTrending: true })
       .select(SONG_LIST_FIELDS)
       .sort({ createdAt: -1 })
       .limit(6)
       .lean();
+
+    global.cache?.set(cacheKey, songs, 120);
     res.status(200).json(songs);
   } catch (error) {
     next(error);
@@ -482,31 +484,22 @@ export const search = async (req, res, next) => {
     const cached = global.cache?.get(cacheKey);
     if (cached) return res.status(200).json(cached);
 
-    // Trim query to prevent issues with whitespace-only searches
-    const trimmedQuery = query.trim();
+    const trimmedQuery = query.trim().toLowerCase();
     if (!trimmedQuery) return res.status(200).json({ songs: [], albums: [] });
-
-    const sanitizedQuery = trimmedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const [songs, albums] = await Promise.all([
       Song.find(
-        {
-          $or: [
-            { title: { $regex: sanitizedQuery, $options: "i" } },
-            { artist: { $regex: sanitizedQuery, $options: "i" } },
-            { genre: { $regex: sanitizedQuery, $options: "i" } },
-          ],
-        },
-        {},
+        { $text: { $search: trimmedQuery } },
+        { score: { $meta: "textScore" } }
       )
+        .sort({ score: { $meta: "textScore" } })
         .limit(15)
         .lean(),
-      Album.find({
-        $or: [
-          { title: { $regex: sanitizedQuery, $options: "i" } },
-          { artist: { $regex: sanitizedQuery, $options: "i" } },
-        ],
-      })
+      Album.find(
+        { $text: { $search: trimmedQuery } },
+        { score: { $meta: "textScore" } }
+      )
+        .sort({ score: { $meta: "textScore" } })
         .limit(10)
         .lean(),
     ]);

@@ -10,7 +10,7 @@ export const protectRoute = async (req, res, next) => {
         .json({ message: "Unauthorized - No userId found" });
     }
     req.userId = userId;
-    const user = await User.findOne({ clerkId: userId });
+    const user = await User.findOne({ clerkId: userId }).lean();
     req.user = user;
     next();
   } catch (error) {
@@ -21,6 +21,9 @@ export const protectRoute = async (req, res, next) => {
 
 export const requireAdmin = async (req, res, next) => {
   try {
+    if (process.env.ADMIN_EMAIL && req.user?.email === process.env.ADMIN_EMAIL) {
+      return next();
+    }
     if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized - Not admin" });
     }
