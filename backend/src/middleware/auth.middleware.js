@@ -3,28 +3,28 @@ import User from "../models/user.model.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    let userId = req.userId;
+    let userId = null;
     
-    if (!userId) {
-      const auth = getAuth(req);
-      userId = auth?.userId;
+    const auth = getAuth(req);
+    if (auth?.userId) {
+      userId = auth.userId;
     }
     
-    if (!userId) {
-      const authHeader = req.headers.authorization;
-      if (authHeader?.startsWith("Bearer ")) {
-        try {
-          const { decode } = await import("jwt-decode");
-          const token = authHeader.slice(7);
-          const decoded = decode(token);
-          userId = decoded?.sub || decoded?.userId;
-        } catch (e) {
-          console.log("Token decode error:", e.message);
+    if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
+      try {
+        const token = req.headers.authorization.slice(7);
+        const parts = token.split('.');
+        if (parts.length >= 2) {
+          const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+          userId = decoded.sub || decoded.userId;
         }
+      } catch (e) {
+        console.log("Token parse error:", e.message);
       }
     }
 
     if (!userId) {
+      console.log("Auth check failed. Headers:", req.headers.authorization?.slice(0, 50));
       return res.status(401).json({ message: "Unauthorized - No userId found" });
     }
 
