@@ -73,8 +73,10 @@ const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",")
   : [
       "https://beatflow-26.vercel.app",
-      "beatflow-sugasrijayaramsts-projects.vercel.app",
-      "http://localhost:3000"
+      "http://beatflow-sugasrijayaramsts-projects.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174"
     ];
 
 const startServer = async () => {
