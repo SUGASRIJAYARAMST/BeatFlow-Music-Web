@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 export const protectRoute = async (req, res, next) => {
   try {
     let userId = null;
+    let userEmail = null;
     
     const auth = getAuth(req);
     if (auth?.userId) {
@@ -17,6 +18,7 @@ export const protectRoute = async (req, res, next) => {
         if (parts.length >= 2) {
           const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
           userId = decoded.sub || decoded.userId;
+          userEmail = decoded.email || decoded.email_address;
         }
       } catch (e) {
         console.log("Token parse error:", e.message);
@@ -31,7 +33,7 @@ export const protectRoute = async (req, res, next) => {
     req.userId = userId;
     const user = await User.findOne({ clerkId: userId }).lean();
     req.user = user;
-    req.userEmail = user?.email;
+    req.userEmail = user?.email || userEmail;
     next();
   } catch (error) {
     console.log("ProtectRoute Error:", error);
@@ -41,7 +43,9 @@ export const protectRoute = async (req, res, next) => {
 
 export const requireAdmin = async (req, res, next) => {
   try {
-    const isAdminEmail = req.userEmail === process.env.ADMIN_EMAIL;
+    const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+    const userEmail = req.userEmail?.toLowerCase();
+    const isAdminEmail = adminEmail && userEmail === adminEmail;
     const isAdminRole = req.user?.role === "admin";
     
     if (isAdminEmail || isAdminRole) {
