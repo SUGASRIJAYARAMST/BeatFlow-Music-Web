@@ -93,10 +93,16 @@ const startServer = async () => {
   app.use(
     cors({
       origin: function (origin, callback) {
-        // allow requests with no origin (mobile apps, curl, postman)
-        if (!origin) return callback(null, true);
+        // Strict CORS policy - require origin header in production
+        if (!origin) {
+          if (process.env.NODE_ENV === "production") {
+            return callback(new Error("Origin header required"));
+          }
+          // Allow localhost in development
+          return callback(null, true);
+        }
 
-        if (allowedOrigins.includes(origin) || origin.startsWith("https://beatflow-")) {
+        if (allowedOrigins.includes(origin)) {
           return callback(null, true);
         } else {
           return callback(new Error("Not allowed by CORS"));
@@ -127,6 +133,9 @@ const startServer = async () => {
       credentials: true,
     }),
   );
+
+  // Webhooks MUST be registered before JSON parsing to capture raw body
+  app.use("/api/webhooks", webhookRoutes);
 
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -166,8 +175,6 @@ const startServer = async () => {
       environment: process.env.NODE_ENV || "development",
     });
   });
-
-  app.use("/api/webhooks", webhookRoutes);
   app.use("/api/auth", authLimiter, authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/songs", songRoutes);

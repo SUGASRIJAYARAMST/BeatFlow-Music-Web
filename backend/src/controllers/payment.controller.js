@@ -5,9 +5,12 @@ import { Wallet } from "../models/wallet.model.js";
 
 const APP_ID = process.env.CASHFREE_APP_ID;
 const SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
+// Test mode disabled in production for security
+// Only enable locally during development
 const IS_TEST_MODE =
-  process.env.CASHFREE_MODE === "sandbox" ||
-  process.env.CASHFREE_MODE === "test";
+  process.env.NODE_ENV === "development" &&
+  (process.env.CASHFREE_MODE === "sandbox" ||
+  process.env.CASHFREE_MODE === "test");
 
 const PRICING = {
   daily: { amount: 1, days: 1 },
@@ -270,20 +273,22 @@ export const checkSubscription = async (req, res, next) => {
       await user.save();
     }
 
+    // Check if subscription has expired
+    let subscriptionExpired = false;
     if (
       user.isPremium &&
       user.subscriptionExpiry &&
       new Date() > user.subscriptionExpiry &&
       user.role !== "admin"
     ) {
-      user.isPremium = false;
-      user.subscriptionPlan = "none";
-      await user.save();
+      subscriptionExpired = true;
+      // Don't auto-update user here, let frontend handle re-authentication
     }
 
     res.status(200).json({
       isPremium: user.isPremium,
       subscriptionPlan: user.subscriptionPlan,
+      subscriptionExpired,
       subscriptionExpiry: user.subscriptionExpiry
         ? new Date(user.subscriptionExpiry).toISOString()
         : null,

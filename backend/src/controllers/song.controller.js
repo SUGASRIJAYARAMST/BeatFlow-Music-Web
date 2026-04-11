@@ -415,6 +415,11 @@ const allowedImageTypes = [
 
 export const updateSong = async (req, res, next) => {
   try {
+    // Authorization check - only admin can update songs
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized - Admin access required" });
+    }
+    
     const {
       title,
       artist,
@@ -439,8 +444,11 @@ export const updateSong = async (req, res, next) => {
 };
 
 export const deleteSong = async (req, res, next) => {
-  try {
-    const song = await Song.findById(req.params.id);
+  try {    // Authorization check - only admin can delete songs
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized - Admin access required" });
+    }
+        const song = await Song.findById(req.params.id);
     if (!song) return res.status(404).json({ message: "Song not found" });
 
     if (song.albumId) {

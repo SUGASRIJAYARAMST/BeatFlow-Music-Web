@@ -117,20 +117,19 @@ export const getAlbumById = async (req, res, next) => {
     if (album.isPremium) {
       try {
         const { userId } = getAuth(req);
-        console.log(
-          `[Album Access] userId: ${userId}, isPremium: ${album.isPremium}`,
-        );
         if (userId) {
           const user = await User.findOne({ clerkId: userId });
-          console.log(
-            `[Album Access] user role: ${user?.role}, isPremium: ${user?.isPremium}`,
-          );
-          if (user && (user.isPremium || user.role === "admin")) {
+          // Check if user has premium subscription that hasn't expired
+          const hasValidSubscription = user && 
+            (user.role === "admin" || 
+            (user.isPremium && (!user.subscriptionExpiry || new Date() <= user.subscriptionExpiry)));
+          
+          if (hasValidSubscription) {
             return res.status(200).json(album);
           }
         }
       } catch (authError) {
-        console.log("[Album Access] Auth check error:", authError.message);
+        // Continue to permission denied response
       }
       return res
         .status(403)
@@ -273,6 +272,11 @@ export const createAlbumWithSongs = async (req, res, next) => {
 
 export const updateAlbum = async (req, res, next) => {
   try {
+    // Authorization check - only admin can update albums
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized - Admin access required" });
+    }
+    
     const { title, artist, genre, releaseYear } = req.body;
     const updatedAlbum = await Album.findByIdAndUpdate(
       req.params.id,
@@ -289,8 +293,11 @@ export const updateAlbum = async (req, res, next) => {
 };
 
 export const deleteAlbum = async (req, res, next) => {
-  try {
-    const album = await Album.findById(req.params.id);
+  try {    // Authorization check - only admin can delete albums
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized - Admin access required" });
+    }
+        const album = await Album.findById(req.params.id);
     if (!album) return res.status(404).json({ message: "Album not found" });
 
     const songs = await Song.find({ albumId: album._id });

@@ -11,22 +11,10 @@ export const protectRoute = async (req, res, next) => {
       userId = auth.userId;
     }
     
-    if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
-      try {
-        const token = req.headers.authorization.slice(7);
-        const parts = token.split('.');
-        if (parts.length >= 2) {
-          const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-          userId = decoded.sub || decoded.userId;
-          userEmail = decoded.email || decoded.email_address;
-        }
-      } catch (e) {
-        console.log("Token parse error:", e.message);
-      }
-    }
+    // Fallback to Bearer token is no longer supported - use Clerk SDK
+    // Bearer tokens should not be accepted for enhanced security
 
     if (!userId) {
-      console.log("Auth check failed. Headers:", req.headers.authorization?.slice(0, 50));
       return res.status(401).json({ message: "Unauthorized - No userId found" });
     }
 
@@ -63,18 +51,14 @@ export const requirePremium = async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    if (!req.user.isPremium && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Premium subscription required" });
-    }
-    if (
-      req.user.isPremium &&
-      req.user.subscriptionExpiry &&
-      new Date() > req.user.subscriptionExpiry
-    ) {
-      req.user.isPremium = false;
-      req.user.subscriptionPlan = "none";
-      await req.user.save();
-      return res.status(403).json({ message: "Subscription expired" });
+    
+    // Check if subscription is valid without modifying user object
+    const isSubscriptionValid = req.user.isPremium && 
+      req.user.role !== "admin" &&
+      (!req.user.subscriptionExpiry || new Date() <= req.user.subscriptionExpiry);
+    
+    if (!isSubscriptionValid && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Premium subscription required or expired" });
     }
     next();
   } catch (error) {

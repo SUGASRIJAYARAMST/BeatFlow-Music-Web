@@ -16,7 +16,7 @@ router.get("/", protectRoute, walletLimiter, getWallet);
 router.post("/add-money", protectRoute, walletLimiter, addMoney);
 router.post("/pay", protectRoute, walletLimiter, payFromWallet);
 router.post("/withdraw", protectRoute, walletLimiter, withdrawFromWallet);
-router.post("/clear-transactions", protectRoute, clearTransactions);
-router.post("/sync-payments", protectRoute, syncPastPayments);
+router.post("/clear-transactions", protectRoute, walletLimiter, clearTransactions);
+router.post("/sync-payments", protectRoute, walletLimiter, syncPastPayments);
 
 export default router;

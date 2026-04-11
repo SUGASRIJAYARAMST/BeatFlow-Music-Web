@@ -3,11 +3,19 @@ import { Song } from "../models/song.model.js";
 
 export const getUserPlaylists = async (req, res, next) => {
   try {
-    const user = await User.findOne({ clerkId: req.userId }).populate(
-      "playlists.songs",
-    );
+    const user = await User.findOne({ clerkId: req.userId })
+      .select("playlists")
+      .lean();
     if (!user) return res.status(404).json({ message: "User not found" });
-    const playlists = (user.playlists || []).map((p) => p.toObject());
+    // Return only playlist metadata (names, descriptions), not full songs
+    const playlists = (user.playlists || []).map(p => ({
+      _id: p._id,
+      name: p.name,
+      description: p.description,
+      organizationType: p.organizationType,
+      songCount: p.songs?.length || 0,
+      createdAt: p.createdAt
+    }));
     res.status(200).json(playlists);
   } catch (error) {
     next(error);
@@ -35,11 +43,8 @@ export const getPlaylistById = async (req, res, next) => {
 
 export const createPlaylist = async (req, res, next) => {
   try {
-    console.log("Create playlist - userId:", req.userId);
     const { name, description, organizationType } = req.body;
-    console.log("Playlist data:", { name, description, organizationType });
     const user = await User.findOne({ clerkId: req.userId });
-    console.log("User found:", !!user, user?._id?.toString());
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.playlists.push({
