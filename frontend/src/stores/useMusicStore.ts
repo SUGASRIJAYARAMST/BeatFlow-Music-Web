@@ -116,10 +116,9 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
             console.log("✅ Processed songs:", songsData.length, "songs loaded");
             
             const sorted = [...songsData].sort((a, b) => {
-                const numA = parseInt(a.title?.match(/\d+/)?.[0] || "0");
-                const numB = parseInt(b.title?.match(/\d+/)?.[0] || "0");
-                if (numA !== numB) return numA - numB;
-                return a.title.localeCompare(b.title);
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return dateB - dateA;
             });
             set({ songs: sorted, cacheTime: { ...get().cacheTime, songs: now } });
             console.log("🎵 Store updated with", sorted.length, "songs");

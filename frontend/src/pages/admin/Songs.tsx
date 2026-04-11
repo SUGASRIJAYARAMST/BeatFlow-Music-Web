@@ -37,7 +37,13 @@ const AdminSongs = () => {
   useEffect(() => {
     console.log("🎯 Admin Songs page mounted, fetching songs...");
     fetchSongs(true);
-  }, [fetchSongs]);
+  }, []);
+
+  useEffect(() => {
+    const handleFocus = () => fetchSongs(true);
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
 
    useEffect(() => {
      console.log("🎵 Songs updated:", songs.length, "songs in store");

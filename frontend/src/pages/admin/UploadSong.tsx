@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { GENRES } from "../../lib/utils";
 
 const AdminUploadSong = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({ title: "", artist: "", genre: "Other", isPremium: false });
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [duration, setDuration] = useState<number | null>(null);
@@ -84,10 +85,8 @@ const AdminUploadSong = () => {
             console.log("✅ Upload response received:", uploadResponse.data);
             
             toast.success("Song uploaded successfully!");
-            console.log("🔄 Calling fetchSongs(true) to refresh...");
             await fetchSongs(true);
-            console.log("🔄 Calling fetchAllHomeData()...");
-            await fetchAllHomeData();
+            navigate("/admin/songs");
             console.log("✅ Data refresh complete!");
             
             setFormData({ title: "", artist: "", genre: "Other", isPremium: false });
