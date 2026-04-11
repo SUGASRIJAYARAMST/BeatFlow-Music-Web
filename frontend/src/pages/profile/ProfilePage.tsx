@@ -423,15 +423,20 @@ const ProfilePage = () => {
             }
         } finally { setSubmittingPinRequest(false); }
     };
-    const savePreferences = useCallback(async (newNotifications?: boolean) => {
-        try {
-            setSaving(true);
-            const enabled = newNotifications ?? notifications;
-            await axiosInstance.put("/users/settings", { notifications: enabled });
-            notificationStore.setEnabled(enabled);
-        } catch { toast.error("Failed to save preferences"); }
-        finally { setSaving(false); }
-    }, [notifications, notificationStore]);
+    const savePreferences = useCallback(
+        debounce(async (newNotifications?: boolean) => {
+            try {
+                const enabled = newNotifications ?? notifications;
+                notificationStore.setEnabled(enabled); // Optimistic UI update
+                await axiosInstance.put("/users/settings", { notifications: enabled });
+                toast.success("Preferences saved successfully");
+            } catch {
+                toast.error("Failed to save preferences");
+                notificationStore.setEnabled(!newNotifications); // Revert on failure
+            }
+        }, 300), // Debounce with 300ms delay
+        [notifications, notificationStore]
+    );
 
     const PLAN_NAMES: Record<string, string> = {
         daily: "Daily",
