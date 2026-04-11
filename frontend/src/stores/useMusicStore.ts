@@ -96,10 +96,14 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
     fetchSongs: async (force = false) => {
         const now = Date.now();
         if (!force && get().cacheTime.songs && now - get().cacheTime.songs < CACHE_DURATION && get().songs.length > 0) {
+            console.log("🔄 Using cached songs:", get().songs.length);
             return;
         }
         try {
+            console.log("📥 Fetching fresh songs from /songs...");
             const response = await axiosInstance.get("/songs");
+            console.log("📦 Response from /songs:", response.data);
+            
             // Handle both possible response formats: { songs: [...] } or [...]
             let songsData = [];
             if (Array.isArray(response.data)) {
@@ -109,6 +113,8 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
             }
             // Ensure we always have an array
             songsData = Array.isArray(songsData) ? songsData : [];
+            console.log("✅ Processed songs:", songsData.length, "songs loaded");
+            
             const sorted = [...songsData].sort((a, b) => {
                 const numA = parseInt(a.title?.match(/\d+/)?.[0] || "0");
                 const numB = parseInt(b.title?.match(/\d+/)?.[0] || "0");
@@ -116,7 +122,9 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
                 return a.title.localeCompare(b.title);
             });
             set({ songs: sorted, cacheTime: { ...get().cacheTime, songs: now } });
+            console.log("🎵 Store updated with", sorted.length, "songs");
         } catch (error: any) {
+            console.error("❌ Fetch songs error:", error);
             set({ error: error.response?.data?.message || error.message });
         }
     },

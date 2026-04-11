@@ -35,10 +35,12 @@ const AdminSongs = () => {
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
 
   useEffect(() => {
+    console.log("🎯 Admin Songs page mounted, fetching songs...");
     fetchSongs(true);
   }, [fetchSongs]);
 
    useEffect(() => {
+     console.log("🎵 Songs updated:", songs.length, "songs in store");
      if (searchTerm.trim() === "") {
        setFilteredSongs(Array.isArray(songs) ? songs : []);
      } else {
