@@ -114,10 +114,14 @@ export const usePlaylistStore = create<PlaylistStore>((set, get) => ({
         const playlistName = get().playlists.find(p => p._id === playlistId)?.name || "playlist";
         try {
             const response = await axiosInstance.post(`/playlists/${playlistId}/songs`, { songId });
+            const updatedPlaylist = response.data.playlist;
+
+            // Update playlists state with the latest data
             set((state) => ({
-                currentPlaylist: response.data.playlist,
-                playlists: state.playlists.map((p) => p._id === playlistId ? response.data.playlist : p),
+                currentPlaylist: updatedPlaylist,
+                playlists: state.playlists.map((p) => p._id === playlistId ? updatedPlaylist : p),
             }));
+
             addNotification(`Added to "${playlistName}" playlist`, "success");
         } catch (error: any) {
             toast.error(error.response?.data?.message || error.message);
