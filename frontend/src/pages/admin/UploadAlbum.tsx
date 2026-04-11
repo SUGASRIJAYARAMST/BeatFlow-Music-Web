@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { axiosInstance } from "../../lib/axios";
-import { useMusicStore } from "../../stores/useMusicStore";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -12,7 +11,6 @@ import { Switch } from "../../components/ui/switch";
 interface SongEntry { title: string; duration: number | null; imageFile: File | null; }
 
 const AdminUploadAlbum = () => {
-    const { fetchSongs, fetchAllHomeData } = useMusicStore();
     const [albumTitle, setAlbumTitle] = useState("");
     const [albumArtist, setAlbumArtist] = useState("");
     const [albumGenre, setAlbumGenre] = useState("Other");
@@ -97,18 +95,17 @@ const AdminUploadAlbum = () => {
                   }
             });
             
-            await axiosInstance.post("/admin/albums/with-songs", data, {
+            const uploadResponse = await axiosInstance.post("/admin/albums/with-songs", data, {
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
                     setUploadProgress(percentCompleted);
                 }
             });
             
+            console.log("✅ Album with songs uploaded successfully:", uploadResponse.data);
+            
             toast.success("Album with songs uploaded!");
-            console.log("🔄 Refreshing songs and home data after album upload...");
-            await fetchSongs(true);
-            await fetchAllHomeData();
-            console.log("✅ Data refresh complete!");
+            // Note: NOT refreshing song list since album songs should stay isolated in the album
             
             setAlbumTitle(""); 
             setAlbumArtist(""); 

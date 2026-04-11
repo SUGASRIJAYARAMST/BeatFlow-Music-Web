@@ -95,18 +95,19 @@ export const getAllSongs = async (req, res, next) => {
     const cacheKey = "all_songs";
     const cached = global.cache?.get(cacheKey);
     if (cached) {
-      console.log("📦 Returning cached songs:", cached.songs.length, "songs");
+      console.log("📦 Returning cached songs:", cached.songs.length, "songs (excluding album songs)");
       return res.status(200).json(cached);
     }
 
     console.log("🔄 Cache miss for 'all_songs', fetching from MongoDB...");
-    const songs = await Song.find({})
+    // Exclude songs that are part of an album (albumId should be null)
+    const songs = await Song.find({ albumId: null })
       .select(SONG_LIST_FIELDS)
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
 
-    console.log("📊 MongoDB returned:", songs.length, "songs");
+    console.log("📊 MongoDB returned:", songs.length, "standalone songs (album songs excluded)");
     
     const optimizedSongs = songs.map((song) => ({
       ...song,
@@ -117,7 +118,7 @@ export const getAllSongs = async (req, res, next) => {
 
     const result = { songs: optimizedSongs };
     global.cache?.set(cacheKey, result, 120);
-    console.log("💾 Cached songs for 120 seconds, returning:", optimizedSongs.length, "songs");
+    console.log("💾 Cached songs for 120 seconds, returning:", optimizedSongs.length, "standalone songs");
     res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error in getAllSongs:", error);
