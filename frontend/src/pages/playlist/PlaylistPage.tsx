@@ -94,7 +94,7 @@ const PlaylistPage = () => {
                                             </div>
                                         </div>
                                         <p className='font-bold text-base-content/90 truncate'>{pl.name}</p>
-                                        <p className='text-xs text-base-content/30'>{pl.songs?.length || 0} songs</p>
+                                        <p className='text-xs text-base-content/30'>{pl.songs?.length || 0} {pl.songs?.length === 1 ? 'song' : 'songs'}</p>
                                     </Link>
                                     <div className='absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10'>
                                         <button

@@ -122,8 +122,9 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
 
     const handleSelectPlaylist = async (playlistId: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        const isInPlaylist = playlists.find(p => p._id === playlistId)?.songs?.some(
-            (s: any) => s.song?._id === song._id || s._id === song._id
+        const playlist = playlists.find(p => p._id === playlistId);
+        const isInPlaylist = playlist?.songs?.some(
+            (s) => (s.song as Song)?._id === song._id || (s.song as Song)?._id === song._id
         );
         try {
             if (isInPlaylist) {
@@ -132,7 +133,6 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
                 await addSongToPlaylist(playlistId, song._id);
             }
             setShowPlaylistMenu(false);
-            await fetchPlaylists(true);
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed");
         }
@@ -278,7 +278,7 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
                         <div className='space-y-1 max-h-48 overflow-y-auto'>
                             {playlists.map((playlist) => {
                                 const isInPlaylist = playlist.songs?.some(
-                                    (s: any) => s.song?._id === song._id || s._id === song._id
+                                    (s) => (s.song as Song)?._id === song._id
                                 );
                                 return (
                                     <button

@@ -3,17 +3,18 @@ import { Song } from "../models/song.model.js";
 
 export const getUserPlaylists = async (req, res, next) => {
   try {
-    const user = await User.findOne({ clerkId: req.userId })
-      .select("playlists")
-      .lean();
+    const user = await User.findOne({ clerkId: req.userId });
     if (!user) return res.status(404).json({ message: "User not found" });
-    // Return only playlist metadata (names, descriptions), not full songs
+    
     const playlists = (user.playlists || []).map(p => ({
       _id: p._id,
       name: p.name,
       description: p.description,
       organizationType: p.organizationType,
-      songCount: p.songs?.length || 0,
+      songs: p.songs?.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt || new Date().toISOString()
+      })) || [],
       createdAt: p.createdAt
     }));
     res.status(200).json(playlists);
@@ -31,14 +32,28 @@ export const getPlaylistById = async (req, res, next) => {
     if (!playlist)
       return res.status(404).json({ message: "Playlist not found" });
 
-    // Fetch only required fields for songs
     const populated = await User.findOne({ clerkId: req.userId }).populate({
-      path: "playlists.songs",
-      select: "_id title artist duration", // Fetch only necessary fields
+      path: "playlists.songs.song",
+      model: "Song",
     });
 
     const pl = populated.playlists.id(req.params.id);
-    res.status(200).json(pl);
+    
+    if (!pl) return res.status(404).json({ message: "Playlist not found" });
+    
+    const result = {
+      _id: pl._id,
+      name: pl.name,
+      description: pl.description,
+      organizationType: pl.organizationType,
+      songs: pl.songs?.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt?.toISOString() || new Date().toISOString()
+      })) || [],
+      createdAt: pl.createdAt
+    };
+    
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -119,21 +134,35 @@ export const addSongToPlaylist = async (req, res, next) => {
     const playlist = user.playlists.id(req.params.id);
     if (!playlist) return res.status(404).json({ message: "Playlist not found" });
 
-    const exists = playlist.songs.some((s) => s.toString() === songId);
+    const exists = playlist.songs.some((s) => {
+      const songRef = s.song || s;
+      return songRef?.toString() === songId;
+    });
     if (exists) return res.status(400).json({ message: "Song already in playlist" });
 
-    playlist.songs.push(songId);
+    playlist.songs.push({ song: songId, addedAt: new Date() });
     await user.save();
 
-    // Properly populate and return the updated playlist
-    const updated = await User.findOne({ clerkId: req.userId }).populate({
-      path: 'playlists.songs',
-      model: 'Song'
+    const populated = await User.findOne({ clerkId: req.userId }).populate({
+      path: "playlists.songs.song",
+      model: "Song",
     });
+
+    const pl = populated.playlists.id(req.params.id);
+    const result = {
+      _id: pl._id,
+      name: pl.name,
+      description: pl.description,
+      organizationType: pl.organizationType,
+      songs: pl.songs?.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt?.toISOString() || new Date().toISOString()
+      })) || [],
+      createdAt: pl.createdAt
+    };
     
-    const playlistObj = updated.playlists.id(req.params.id);
-    console.log("✅ Song added to playlist:", playlistObj.name);
-    res.status(200).json({ message: "Song added", playlist: playlistObj });
+    console.log("✅ Song added to playlist:", result.name);
+    res.status(200).json({ message: "Song added", playlist: result });
   } catch (error) {
     console.error("❌ Add song to playlist error:", error);
     next(error);
@@ -149,20 +178,31 @@ export const removeSongFromPlaylist = async (req, res, next) => {
     if (!playlist)
       return res.status(404).json({ message: "Playlist not found" });
 
-    playlist.songs = playlist.songs.filter(
-      (s) => s.toString() !== req.params.songId,
-    );
+    playlist.songs = playlist.songs.filter((s) => {
+      const songRef = s.song || s;
+      return songRef?.toString() !== req.params.songId;
+    });
     await user.save();
 
-    const updated = await User.findOne({ clerkId: req.userId }).populate(
-      "playlists.songs",
-    );
-    res
-      .status(200)
-      .json({
-        message: "Song removed",
-        playlist: updated.playlists.id(req.params.id),
-      });
+    const populated = await User.findOne({ clerkId: req.userId }).populate({
+      path: "playlists.songs.song",
+      model: "Song",
+    });
+
+    const pl = populated.playlists.id(req.params.id);
+    const result = {
+      _id: pl._id,
+      name: pl.name,
+      description: pl.description,
+      organizationType: pl.organizationType,
+      songs: pl.songs?.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt?.toISOString() || new Date().toISOString()
+      })) || [],
+      createdAt: pl.createdAt
+    };
+    
+    res.status(200).json({ message: "Song removed", playlist: result });
   } catch (error) {
     next(error);
   }

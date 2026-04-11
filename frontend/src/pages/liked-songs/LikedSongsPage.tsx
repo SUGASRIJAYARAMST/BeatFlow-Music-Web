@@ -54,8 +54,9 @@ const LikedSongsPage = () => {
     const handleSelectPlaylist = async (playlistId: string, songId: string, e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            const isInPlaylist = playlists.find(p => p._id === playlistId)?.songs?.some(
-                (s: any) => s.song?._id === songId || s._id === songId
+            const playlist = playlists.find(p => p._id === playlistId);
+            const isInPlaylist = playlist?.songs?.some(
+                (s) => (s.song as Song)?._id === songId
             );
             if (isInPlaylist) {
                 await removeSongFromPlaylist(playlistId, songId);
@@ -63,7 +64,6 @@ const LikedSongsPage = () => {
                 await addSongToPlaylist(playlistId, songId);
             }
             setShowPlaylistMenu(null);
-            await fetchPlaylists(true);
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed");
         }
