@@ -251,7 +251,16 @@ export const createAlbumWithSongs = async (req, res, next) => {
 
     await album.save({ session });
     await session.commitTransaction();
-    global.cache?.flushAll();
+    
+    // Clear song and album-related caches to ensure fresh data
+    global.cache?.del("all_songs");
+    global.cache?.del("featured_songs");
+    global.cache?.del("trending_songs");
+    global.cache?.del("made_for_you");
+    global.cache?.del("recent_songs");
+    global.cache?.del("albums");
+    
+    console.log("✅ Album with songs created successfully:", album.title, "with", createdSongs.length, "songs");
     global.broadcastEvent?.("album-created", album);
 
     res
@@ -285,9 +294,14 @@ export const updateAlbum = async (req, res, next) => {
     );
     if (!updatedAlbum)
       return res.status(404).json({ message: "Album not found" });
-    global.cache?.flushAll();
+    
+    // Clear album-related caches
+    global.cache?.del("albums");
+    
+    console.log("✅ Album updated:", updatedAlbum.title);
     res.status(200).json(updatedAlbum);
   } catch (error) {
+    console.error("❌ Error updating album:", error);
     next(error);
   }
 };
@@ -318,7 +332,16 @@ export const deleteAlbum = async (req, res, next) => {
 
     await Song.deleteMany({ albumId: album._id });
     await Album.findByIdAndDelete(req.params.id);
-    global.cache?.flushAll();
+    
+    // Clear song and album-related caches
+    global.cache?.del("all_songs");
+    global.cache?.del("featured_songs");
+    global.cache?.del("trending_songs");
+    global.cache?.del("made_for_you");
+    global.cache?.del("recent_songs");
+    global.cache?.del("albums");
+    
+    console.log("✅ Album deleted successfully:", album.title);
     global.broadcastEvent?.("album-deleted", { id: req.params.id });
     res
       .status(200)

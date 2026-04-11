@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { axiosInstance } from "../../lib/axios";
+import { useMusicStore } from "../../stores/useMusicStore";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -11,6 +12,7 @@ import { Switch } from "../../components/ui/switch";
 interface SongEntry { title: string; duration: number | null; imageFile: File | null; }
 
 const AdminUploadAlbum = () => {
+    const { fetchSongs, fetchAllHomeData } = useMusicStore();
     const [albumTitle, setAlbumTitle] = useState("");
     const [albumArtist, setAlbumArtist] = useState("");
     const [albumGenre, setAlbumGenre] = useState("Other");
@@ -101,8 +103,19 @@ const AdminUploadAlbum = () => {
                     setUploadProgress(percentCompleted);
                 }
             });
+            
             toast.success("Album with songs uploaded!");
-            setAlbumTitle(""); setAlbumArtist(""); setAlbumYear(""); setAlbumImage(null); setSongs([{ title: "", duration: null, imageFile: null }]); setAudioFiles([null]);
+            console.log("🔄 Refreshing songs and home data after album upload...");
+            await fetchSongs(true);
+            await fetchAllHomeData();
+            console.log("✅ Data refresh complete!");
+            
+            setAlbumTitle(""); 
+            setAlbumArtist(""); 
+            setAlbumYear(""); 
+            setAlbumImage(null); 
+            setSongs([{ title: "", duration: null, imageFile: null }]); 
+            setAudioFiles([null]);
             setUploadProgress(0);
             audioInputRefs.current.forEach(ref => { if (ref) ref.value = ""; });
             imageInputRefs.current.forEach(ref => { if (ref) ref.value = ""; });
