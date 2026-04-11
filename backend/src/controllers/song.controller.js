@@ -94,14 +94,20 @@ export const getAllSongs = async (req, res, next) => {
   try {
     const cacheKey = "all_songs";
     const cached = global.cache?.get(cacheKey);
-    if (cached) return res.status(200).json(cached);
+    if (cached) {
+      console.log("📦 Returning cached songs:", cached.songs.length, "songs");
+      return res.status(200).json(cached);
+    }
 
+    console.log("🔄 Cache miss for 'all_songs', fetching from MongoDB...");
     const songs = await Song.find({})
       .select(SONG_LIST_FIELDS)
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
 
+    console.log("📊 MongoDB returned:", songs.length, "songs");
+    
     const optimizedSongs = songs.map((song) => ({
       ...song,
       audioUrl: song.audioUrl?.includes("f_mp3")
@@ -111,8 +117,10 @@ export const getAllSongs = async (req, res, next) => {
 
     const result = { songs: optimizedSongs };
     global.cache?.set(cacheKey, result, 120);
+    console.log("💾 Cached songs for 120 seconds, returning:", optimizedSongs.length, "songs");
     res.status(200).json(result);
   } catch (error) {
+    console.error("❌ Error in getAllSongs:", error);
     next(error);
   }
 };

@@ -58,22 +58,42 @@ const AdminUploadSong = () => {
         setUploadProgress(0);
         try {
             const data = new FormData();
-            data.append("title", formData.title); data.append("artist", formData.artist); data.append("genre", formData.genre);
+            data.append("title", formData.title); 
+            data.append("artist", formData.artist); 
+            data.append("genre", formData.genre);
             data.append("duration", duration ? String(duration) : "0");
             data.append("isPremium", String(formData.isPremium));
-            data.append("audioFile", audioFile); data.append("imageFile", imageFile);
-            await axiosInstance.post("/admin/songs", data, {
+            data.append("audioFile", audioFile); 
+            data.append("imageFile", imageFile);
+            
+            console.log("📤 Uploading song:", { 
+              title: formData.title, 
+              artist: formData.artist,
+              duration,
+              fileSize: audioFile.size
+            });
+            
+            const uploadResponse = await axiosInstance.post("/admin/songs", data, {
                 headers: { "Content-Type": "multipart/form-data" },
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
                     setUploadProgress(percentCompleted);
                 }
             });
+            
+            console.log("✅ Upload response received:", uploadResponse.data);
+            
             toast.success("Song uploaded successfully!");
+            console.log("🔄 Calling fetchSongs(true) to refresh...");
             await fetchSongs(true);
+            console.log("🔄 Calling fetchAllHomeData()...");
             await fetchAllHomeData();
+            console.log("✅ Data refresh complete!");
+            
             setFormData({ title: "", artist: "", genre: "Other", isPremium: false });
-            setAudioFile(null); setImageFile(null); setDuration(null);
+            setAudioFile(null); 
+            setImageFile(null); 
+            setDuration(null);
             setUploadProgress(0);
             if (audioInputRef.current) audioInputRef.current.value = "";
             if (imageInputRef.current) imageInputRef.current.value = "";
