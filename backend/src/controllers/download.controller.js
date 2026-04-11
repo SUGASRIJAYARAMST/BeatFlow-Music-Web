@@ -1,4 +1,3 @@
-import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import { Song } from "../models/song.model.js";
 import User from "../models/user.model.js";
@@ -45,30 +44,21 @@ export const downloadSong = async (req, res, next) => {
       return res.status(404).json({ message: "Audio file not found" });
     }
 
-    const secureUrl = cloudinary.url(publicId, {
+    const downloadUrl = cloudinary.url(publicId, {
       resource_type: "video",
       format: "mp3",
       type: "upload",
-      sign_url: false,
+      attachment: song.title.replace(/[^a-z0-9]/gi, "_").toLowerCase() + "_beatflow.mp3",
     });
 
-    const fileName = `${song.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_beatflow.mp3`;
+    if (!downloadUrl) {
+      return res.status(500).json({ message: "Failed to generate download URL" });
+    }
 
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.setHeader("Content-Type", "audio/mpeg");
-
-    const response = await axios({
-      method: "get",
-      url: secureUrl,
-      responseType: "stream",
-      timeout: 180000,
-    });
-
-    res.status(200);
-    response.data.pipe(res);
+    res.redirect(downloadUrl);
   } catch (error) {
     console.error("Download error:", error.message);
-    res.status(500).json({ message: "Download failed: " + error.message });
+    res.status(500).json({ message: "Download failed" });
   }
 };
 
