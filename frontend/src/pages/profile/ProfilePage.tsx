@@ -262,8 +262,17 @@ const ProfilePage = () => {
             toast.error("Image must be less than 8MB");
             return;
         }
+
+        const img = new Image();
         const reader = new FileReader();
         reader.onload = () => {
+            img.src = reader.result as string;
+        };
+        img.onload = () => {
+            if (img.width < 300 || img.height < 300) {
+                toast.error("Image must be at least 300x300 pixels");
+                return;
+            }
             setCropImage(reader.result as string);
             setShowCropModal(true);
         };
@@ -276,14 +285,20 @@ const ProfilePage = () => {
             croppedCanvas.toBlob(async (blob) => {
                 if (!blob) return;
                 const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+
+                // Add loading spinner feedback
+                toast.loading("Uploading profile picture...");
+
                 await user?.setProfileImage({ file });
+                toast.dismiss();
                 toast.success("Profile picture updated!");
                 setShowCropModal(false);
                 setCropImage(null);
                 await fetchUserProfile();
                 window.location.reload();
-            }, "image/jpeg", 0.95);
+            }, "image/jpeg", 0.95); // High-quality compression
         } catch (error: any) {
+            toast.dismiss();
             toast.error(error.message || "Failed to update profile picture");
         } finally {
             setSaving(false);
