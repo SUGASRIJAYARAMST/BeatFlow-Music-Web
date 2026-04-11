@@ -6,6 +6,18 @@ export const getUserPlaylists = async (req, res, next) => {
     const user = await User.findOne({ clerkId: req.userId });
     if (!user) return res.status(404).json({ message: "User not found" });
     
+    let migrated = false;
+    for (const p of user.playlists) {
+      if (p.songs.some(s => typeof s === "string" || !s.song)) {
+        p.songs = p.songs.map(s => ({
+          song: s.song || s,
+          addedAt: s.addedAt || new Date()
+        }));
+        migrated = true;
+      }
+    }
+    if (migrated) await user.save();
+    
     const playlists = (user.playlists || []).map(p => ({
       _id: p._id,
       name: p.name,
@@ -13,12 +25,13 @@ export const getUserPlaylists = async (req, res, next) => {
       organizationType: p.organizationType,
       songs: p.songs?.map(s => ({
         song: s.song || s,
-        addedAt: s.addedAt || new Date().toISOString()
+        addedAt: s.addedAt?.toISOString() || new Date().toISOString()
       })) || [],
       createdAt: p.createdAt
     }));
     res.status(200).json(playlists);
   } catch (error) {
+    console.error("❌ getUserPlaylists error:", error);
     next(error);
   }
 };
@@ -31,6 +44,16 @@ export const getPlaylistById = async (req, res, next) => {
     const playlist = user.playlists.id(req.params.id);
     if (!playlist)
       return res.status(404).json({ message: "Playlist not found" });
+
+    // Migrate old songs format if needed
+    const needsMigration = playlist.songs.some(s => typeof s === "string" || !s.song);
+    if (needsMigration) {
+      playlist.songs = playlist.songs.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt || new Date()
+      }));
+      await user.save();
+    }
 
     const populated = await User.findOne({ clerkId: req.userId }).populate({
       path: "playlists.songs.song",
@@ -55,6 +78,7 @@ export const getPlaylistById = async (req, res, next) => {
     
     res.status(200).json(result);
   } catch (error) {
+    console.error("❌ getPlaylistById error:", error);
     next(error);
   }
 };
@@ -134,6 +158,14 @@ export const addSongToPlaylist = async (req, res, next) => {
     const playlist = user.playlists.id(req.params.id);
     if (!playlist) return res.status(404).json({ message: "Playlist not found" });
 
+    // Migrate old format if needed
+    if (playlist.songs.some(s => typeof s === "string" || !s.song)) {
+      playlist.songs = playlist.songs.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt || new Date()
+      }));
+    }
+
     const exists = playlist.songs.some((s) => {
       const songRef = s.song || s;
       return songRef?.toString() === songId;
@@ -177,6 +209,14 @@ export const removeSongFromPlaylist = async (req, res, next) => {
     const playlist = user.playlists.id(req.params.id);
     if (!playlist)
       return res.status(404).json({ message: "Playlist not found" });
+
+    // Migrate old format if needed
+    if (playlist.songs.some(s => typeof s === "string" || !s.song)) {
+      playlist.songs = playlist.songs.map(s => ({
+        song: s.song || s,
+        addedAt: s.addedAt || new Date()
+      }));
+    }
 
     playlist.songs = playlist.songs.filter((s) => {
       const songRef = s.song || s;

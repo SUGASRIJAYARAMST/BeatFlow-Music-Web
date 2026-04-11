@@ -30,7 +30,10 @@ const userSchema = new mongoose.Schema(
           enum: ["list", "tree", "genre", "artist"],
           default: "list",
         },
-        songs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Song" }],
+        songs: [{
+          song: { type: mongoose.Schema.Types.ObjectId, ref: "Song" },
+          addedAt: { type: Date, default: Date.now }
+        }],
         createdAt: { type: Date, default: Date.now },
       },
     ],

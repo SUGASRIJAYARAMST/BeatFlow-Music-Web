@@ -25,7 +25,8 @@ const GENRE_ICONS = [Disc, Mic2, Radio, Waves, Bird, Album, TreeDeciduous, Guita
 
 const SearchPage = () =>  {
     const [query, setQuery] = useState("");
-    const { searchResults, search, isLoading } = useMusicStore();
+    const [localResults, setLocalResults] = useState<any[]>([]);
+    const { searchResults, search, isLoading, songs } = useMusicStore();
     const { t } = useLanguageStore();
     const abortRef = useRef<AbortController | null>(null);
     const debouncedSearch = useCallback((q: string) => {
@@ -34,8 +35,24 @@ const SearchPage = () =>  {
         search(q, abortRef.current.signal);
     }, [search]);
 
+    // Local instant search from cached songs
     useEffect(() => {
-        const timer = setTimeout(() => { if (query.trim()) debouncedSearch(query); }, 200);
+        if (query.trim().length > 0 && songs.length > 0) {
+            const q = query.toLowerCase();
+            const filtered = songs
+                .filter(s => 
+                    s.title.toLowerCase().includes(q) || 
+                    s.artist.toLowerCase().includes(q)
+                )
+                .slice(0, 5);
+            setLocalResults(filtered);
+        } else {
+            setLocalResults([]);
+        }
+    }, [query, songs]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => { if (query.trim()) debouncedSearch(query); }, 100);
         return () => clearTimeout(timer);
     }, [query, debouncedSearch]);
     useEffect(() => () => { if (abortRef.current) abortRef.current.abort(); }, []);
@@ -59,6 +76,17 @@ const SearchPage = () =>  {
 
                     {query.trim() ? (
                         <div className="space-y-8">
+                            {/* Instant local results */}
+                            {localResults.length > 0 && !isLoading && (
+                                <div>
+                                    <h2 className='text-2xl font-bold text-white mb-4'>Quick Results</h2>
+                                    <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+                                        {localResults.map((song) => (
+                                            <SongCard key={song._id} song={song} songs={localResults} />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             {isLoading ? (
                                 <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
                                     {Array.from({ length: 5 }).map((_, i) => (
@@ -73,7 +101,7 @@ const SearchPage = () =>  {
                                 <>
                                     {searchResults.songs.length > 0 && (
                                         <div>
-                                            <h2 className='text-2xl font-bold text-white mb-4'>Songs</h2>
+                                            <h2 className='text-2xl font-bold text-white mb-4'>All Songs</h2>
                                             <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'>
                                                 {searchResults.songs.map((song) => (
                                                     <SongCard key={song._id} song={song} songs={searchResults.songs} />
@@ -81,7 +109,7 @@ const SearchPage = () =>  {
                                             </div>
                                         </div>
                                     )}
-                                    {searchResults.songs.length === 0 && (
+                                    {searchResults.songs.length === 0 && localResults.length === 0 && (
                                         <div className='text-center py-20'>
                                             <SearchIcon className='size-16 mx-auto text-gray-500 mb-4' />
                                             <h3 className="text-xl font-bold text-white mb-2">{t("no_results")}</h3>
