@@ -156,7 +156,7 @@ const AdminSongs = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search songs by title, artist, or genre..."
-          className="w-full max-w-xs"
+          className="w-full max-w-xs border border-gray/8"
         />
       </div>
 
