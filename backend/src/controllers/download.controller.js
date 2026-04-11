@@ -1,3 +1,5 @@
+import axios from "axios";
+import { v2 as cloudinary } from "cloudinary";
 import { Song } from "../models/song.model.js";
 import User from "../models/user.model.js";
 
@@ -30,29 +32,43 @@ export const downloadSong = async (req, res, next) => {
       );
     }
 
-    let downloadUrl = song.audioUrl;
-    if (downloadUrl.includes("/authenticated/")) {
-      downloadUrl = downloadUrl.replace("/video/authenticated/", "/video/upload/");
-      const queryIndex = downloadUrl.indexOf("?_a=");
-      if (queryIndex > -1) downloadUrl = downloadUrl.substring(0, queryIndex);
+    let publicId = song.audioPublicId;
+
+    if (!publicId) {
+      const urlParts = song.audioUrl.match(/\/upload\/(.+)$/);
+      if (urlParts) {
+        publicId = urlParts[1].replace(/,.*$/, "").replace(/\?.*$/, "");
+      }
     }
 
-    if (downloadUrl.includes("/upload/")) {
-      const uploadIndex = downloadUrl.indexOf("/upload/");
-      let afterUpload = downloadUrl.substring(uploadIndex + 9);
-      if (afterUpload.includes(",")) afterUpload = afterUpload.split(",")[0];
-      if (afterUpload.includes("?")) afterUpload = afterUpload.split("?")[0];
-      downloadUrl = downloadUrl.substring(0, uploadIndex + 9) + afterUpload;
+    if (!publicId) {
+      return res.status(404).json({ message: "Audio file not found" });
     }
+
+    const secureUrl = cloudinary.url(publicId, {
+      resource_type: "video",
+      format: "mp3",
+      type: "upload",
+      sign_url: false,
+    });
 
     const fileName = `${song.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_beatflow.mp3`;
 
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     res.setHeader("Content-Type", "audio/mpeg");
-    res.redirect(downloadUrl);
+
+    const response = await axios({
+      method: "get",
+      url: secureUrl,
+      responseType: "stream",
+      timeout: 180000,
+    });
+
+    res.status(200);
+    response.data.pipe(res);
   } catch (error) {
-    console.error("Download error:", error);
-    next(error);
+    console.error("Download error:", error.message);
+    res.status(500).json({ message: "Download failed: " + error.message });
   }
 };
 
