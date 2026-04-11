@@ -516,16 +516,22 @@ export const search = async (req, res, next) => {
 
     const cacheKey = `search_${query.toLowerCase().trim()}`;
     const cached = global.cache?.get(cacheKey);
-    if (cached) return res.status(200).json(cached);
+    if (cached) {
+      console.log("🔍 Search cache hit for:", query);
+      return res.status(200).json(cached);
+    }
 
+    console.log("🔍 Searching for:", query);
     const trimmedQuery = query.trim().toLowerCase();
     if (!trimmedQuery) return res.status(200).json({ songs: [], albums: [] });
 
     const [songs, albums] = await Promise.all([
+      // Search only standalone songs (albumId: null), not album songs
       Song.find(
-        { $text: { $search: trimmedQuery } },
+        { $text: { $search: trimmedQuery }, albumId: null },
         { score: { $meta: "textScore" } }
       )
+        .select(SONG_LIST_FIELDS)
         .sort({ score: { $meta: "textScore" } })
         .limit(15)
         .lean(),
@@ -533,6 +539,7 @@ export const search = async (req, res, next) => {
         { $text: { $search: trimmedQuery } },
         { score: { $meta: "textScore" } }
       )
+        .select("title artist imageUrl genre createdAt rating")
         .sort({ score: { $meta: "textScore" } })
         .limit(10)
         .lean(),
@@ -540,8 +547,10 @@ export const search = async (req, res, next) => {
 
     const result = { songs, albums };
     global.cache?.set(cacheKey, result, 60);
+    console.log("✅ Search results:", songs.length, "songs,", albums.length, "albums");
     res.status(200).json(result);
   } catch (error) {
+    console.error("❌ Search error:", error);
     next(error);
   }
 };

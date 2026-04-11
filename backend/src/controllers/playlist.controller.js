@@ -122,14 +122,17 @@ export const addSongToPlaylist = async (req, res, next) => {
     playlist.songs.push(songId);
     await user.save();
 
-    const updated = await User.findOne({ clerkId: req.userId })
-      .populate("playlists.songs")
-      .lean();
+    // Properly populate and return the updated playlist
+    const updated = await User.findOne({ clerkId: req.userId }).populate({
+      path: 'playlists.songs',
+      model: 'Song'
+    });
     
     const playlistObj = updated.playlists.id(req.params.id);
+    console.log("✅ Song added to playlist:", playlistObj.name);
     res.status(200).json({ message: "Song added", playlist: playlistObj });
   } catch (error) {
-    console.error("Add song error:", error);
+    console.error("❌ Add song to playlist error:", error);
     next(error);
   }
 };
