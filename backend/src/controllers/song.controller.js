@@ -406,10 +406,17 @@ const allowedImageTypes = [
     if (albumId) {
       await Album.findByIdAndUpdate(albumId, { $push: { songs: song._id } });
     }
-    global.cache?.flushAll();
+    // Clear all song-related caches to ensure fresh data
+    global.cache?.del("all_songs");
+    global.cache?.del("featured_songs");
+    global.cache?.del("trending_songs");
+    global.cache?.del("made_for_you");
+    global.cache?.del("recent_songs");
+    
+    console.log("✅ Song created successfully:", song._id, song.title);
     res.status(201).json({ message: "Song created successfully", song });
   } catch (error) {
-    console.log("Error in createSong", error);
+    console.error("❌ Error in createSong:", error);
     next(error);
   }
 };
@@ -437,7 +444,10 @@ export const updateSong = async (req, res, next) => {
     );
     if (!updatedSong)
       return res.status(404).json({ message: "Song not found" });
-    global.cache?.flushAll();
+    // Clear song-related caches
+    global.cache?.del("all_songs");
+    global.cache?.del("featured_songs");
+    global.cache?.del("trending_songs");
     res.status(200).json(updatedSong);
   } catch (error) {
     next(error);
@@ -474,12 +484,18 @@ export const deleteSong = async (req, res, next) => {
     }
 
     await Song.findByIdAndDelete(req.params.id);
-    global.cache?.flushAll();
+    // Clear song-related caches
+    global.cache?.del("all_songs");
+    global.cache?.del("featured_songs");
+    global.cache?.del("trending_songs");
+    global.cache?.del("recent_songs");
+    global.cache?.del("made_for_you");
+    
     res
       .status(200)
       .json({ success: true, message: "Song deleted successfully" });
   } catch (error) {
-    console.log("Error deleting song", error);
+    console.error("❌ Error deleting song:", error);
     next(error);
   }
 };
