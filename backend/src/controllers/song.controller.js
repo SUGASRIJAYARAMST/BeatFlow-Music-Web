@@ -372,8 +372,9 @@ const allowedImageTypes = [
     }
 
      console.log('Starting file uploads to Cloudinary...');
+     let audioUpload, imageUpload;
      try {
-       const [audioUpload, imageUpload] = await Promise.all([
+       [audioUpload, imageUpload] = await Promise.all([
          uploadToCloudinary(audioFile),
          uploadToCloudinary(imageFile),
        ]);
