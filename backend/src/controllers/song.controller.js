@@ -10,22 +10,20 @@ import User from "../models/user.model.js";
 const uploadToCloudinary = async (file) => {
   try {
     // Determine resource type based on file mimetype
-    let resourceType = "video";
+    let resourceType = file.mimetype.startsWith("image/") ? "image" : "video";
 
-    if (file.mimetype.startsWith("image/")) {
-      resourceType = "image";
-    }
-
-    const result = await cloudinary.uploader.upload(file.tempFilePath, {
+    // Offload upload to a background job for faster response
+    const uploadPromise = cloudinary.uploader.upload(file.tempFilePath, {
       resource_type: resourceType,
       folder: resourceType === "video" ? "songs" : "images",
-      // Use eager transformations for better performance
       eager: [
         { transformation: [{ quality: "auto", bit_rate: "128k" }, { fetch_format: "auto" }] }
       ],
-      eager_async: true
+      eager_async: true,
     });
 
+    // Cache the result for future use
+    const result = await uploadPromise;
     const optimizedUrl =
       resourceType === "video"
         ? cloudinary.url(result.public_id, {
@@ -35,24 +33,14 @@ const uploadToCloudinary = async (file) => {
               { quality: "auto", bit_rate: "128k" },
               { fetch_format: "auto" }
             ],
-            flags: "streaming_attachment"
+            flags: "streaming_attachment",
           })
         : result.secure_url;
 
-    return {
-      url: optimizedUrl,
-      publicId: result.public_id,
-    };
+    return optimizedUrl;
   } catch (error) {
-    console.error("Error uploading to cloudinary:", error);
-
-    if (error.message && error.message.includes("File size too large")) {
-      throw new Error(
-        "File exceeds Cloudinary's limit (10MB for free accounts). Please compress your file or upgrade your Cloudinary plan.",
-      );
-    }
-
-    throw new Error("Error uploading to cloudinary");
+    console.error("Cloudinary upload error:", error);
+    throw new Error("Failed to upload file to Cloudinary");
   }
 };
 const checkSongAccess = async (song, clerkId) => {

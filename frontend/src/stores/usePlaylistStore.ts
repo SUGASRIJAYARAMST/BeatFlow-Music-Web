@@ -40,6 +40,7 @@ export const usePlaylistStore = create<PlaylistStore>((set, get) => ({
             set({ playlists: response.data, cacheTime: now });
         } catch (error: any) {
             set({ error: error.response?.data?.message || error.message });
+            toast.error("Failed to fetch playlists");
         } finally {
             set({ isLoading: false });
         }
@@ -113,18 +114,39 @@ export const usePlaylistStore = create<PlaylistStore>((set, get) => ({
         const { addNotification } = useNotificationStore.getState();
         const playlistName = get().playlists.find(p => p._id === playlistId)?.name || "playlist";
         try {
-            const response = await axiosInstance.post(`/playlists/${playlistId}/songs`, { songId });
-            const updatedPlaylist = response.data.playlist;
+            // Optimistic update with a placeholder Song object
+            const placeholderSong: Song = {
+                _id: songId,
+                title: "Loading...",
+                artist: "Unknown",
+                genre: "",
+                albumId: null,
+                imageUrl: "",
+                audioUrl: "",
+                duration: 0,
+                isFeatured: false,
+                isTrending: false,
+                isPremium: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
 
-            // Update playlists state with the latest data
             set((state) => ({
-                currentPlaylist: updatedPlaylist,
-                playlists: state.playlists.map((p) => p._id === playlistId ? updatedPlaylist : p),
+                playlists: state.playlists.map((p) =>
+                    p._id === playlistId ? { ...p, songs: [...p.songs, { song: placeholderSong, addedAt: new Date().toISOString() }] } : p
+                ),
             }));
 
+            await axiosInstance.post(`/playlists/${playlistId}/songs`, { songId });
             addNotification(`Added to "${playlistName}" playlist`, "success");
         } catch (error: any) {
             toast.error(error.response?.data?.message || error.message);
+            // Revert optimistic update on failure
+            set((state) => ({
+                playlists: state.playlists.map((p) =>
+                    p._id === playlistId ? { ...p, songs: p.songs.filter((s) => s.song._id !== songId) } : p
+                ),
+            }));
         }
     },
 

@@ -31,9 +31,12 @@ export const getPlaylistById = async (req, res, next) => {
     if (!playlist)
       return res.status(404).json({ message: "Playlist not found" });
 
-    const populated = await User.findOne({ clerkId: req.userId }).populate(
-      "playlists.songs",
-    );
+    // Fetch only required fields for songs
+    const populated = await User.findOne({ clerkId: req.userId }).populate({
+      path: "playlists.songs",
+      select: "_id title artist duration", // Fetch only necessary fields
+    });
+
     const pl = populated.playlists.id(req.params.id);
     res.status(200).json(pl);
   } catch (error) {
