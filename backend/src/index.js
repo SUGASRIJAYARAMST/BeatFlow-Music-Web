@@ -93,15 +93,12 @@ const startServer = async () => {
   app.use(
     cors({
       origin: function (origin, callback) {
-        // Strict CORS policy - require origin header in production
+        // Allow requests without origin (mobile apps, curl, postman, health checks)
         if (!origin) {
-          if (process.env.NODE_ENV === "production") {
-            return callback(new Error("Origin header required"));
-          }
-          // Allow localhost in development
           return callback(null, true);
         }
 
+        // Validate origin if provided
         if (allowedOrigins.includes(origin)) {
           return callback(null, true);
         } else {
