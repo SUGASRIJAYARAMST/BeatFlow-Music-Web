@@ -14,9 +14,7 @@ export const axiosInstance = axios.create({
 
 // Request interceptor to add the bearer token automatically
 axiosInstance.interceptors.request.use(async (config) => {
-    if (config.data instanceof FormData) {
-        return config;
-    }
+    // Add token to ALL requests, including FormData (file uploads)
     if (window.Clerk?.session?.getToken) {
         try {
             const token = await window.Clerk.session.getToken();

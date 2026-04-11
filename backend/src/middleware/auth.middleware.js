@@ -6,15 +6,35 @@ export const protectRoute = async (req, res, next) => {
     let userId = null;
     let userEmail = null;
     
+    // First try Clerk SDK
     const auth = getAuth(req);
     if (auth?.userId) {
       userId = auth.userId;
+      console.log("✅ Auth via Clerk SDK:", userId);
     }
     
-    // Fallback to Bearer token is no longer supported - use Clerk SDK
-    // Bearer tokens should not be accepted for enhanced security
+    // Fallback: Accept Bearer token from headers if Clerk token not found
+    // This allows testing with curl, Postman, and other clients
+    if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
+      try {
+        const token = req.headers.authorization.slice(7);
+        // Check if it looks like a Clerk user ID (starts with user_)
+        if (token.startsWith("user_")) {
+          userId = token;
+          console.log("✅ Auth via Bearer token:", userId);
+        }
+      } catch (e) {
+        // Ignore token parsing errors, continue to unauthorized response
+      }
+    }
 
     if (!userId) {
+      // Debug info
+      console.warn("❌ Auth failed - no userId found");
+      console.warn("Clerk auth:", auth);
+      console.warn("Authorization header:", req.headers.authorization ? "present" : "missing");
+      console.warn("Request path:", req.path);
+      console.warn("Request method:", req.method);
       return res.status(401).json({ message: "Unauthorized - No userId found" });
     }
 
@@ -24,7 +44,7 @@ export const protectRoute = async (req, res, next) => {
     req.userEmail = user?.email || userEmail;
     next();
   } catch (error) {
-    console.log("ProtectRoute Error:", error);
+    console.error("ProtectRoute Error:", error);
     return res.status(401).json({ message: "Unauthorized" });
   }
 };
