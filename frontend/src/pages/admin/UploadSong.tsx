@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -20,6 +20,17 @@ const AdminUploadSong = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const { fetchSongs, fetchAllHomeData } = useMusicStore();
     const audioInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isUploading) {
+                e.preventDefault();
+                e.returnValue = "";
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [isUploading]);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +87,7 @@ const AdminUploadSong = () => {
             
             const uploadResponse = await axiosInstance.post("/admin/songs", data, {
                 headers: { "Content-Type": "multipart/form-data" },
+                timeout: 180000, // 3 minutes timeout for large files
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
                     setUploadProgress(percentCompleted);
