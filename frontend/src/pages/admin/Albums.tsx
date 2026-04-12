@@ -242,7 +242,7 @@ const AdminAlbums = () => {
               <div className="relative group">
                 <div className="aspect-square rounded-xl overflow-hidden bg-base-100 border-2 border-dashed border-white/10 group-hover:border-emerald-500/50 transition-all">
                   {selectedAlbum?.imageUrl ? (
-                    <img src={optimizeImage(selectedAlbum.imageUrl, 400)} alt={formData.title} className="w-full h-full object-cover" />
+                    <img src={optimizeImage(selectedAlbum.imageUrl, "lg")} alt={formData.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-base-content/40">
                       <Image className="size-12 mb-2" />
