@@ -3,11 +3,12 @@ import type { Song } from "../../types";
 import { useMusicStore } from "../../stores/useMusicStore";
 import { usePlayerStore } from "../../stores/usePlayerStore";
 import { removeRecentSong } from "../../utils/recentSongs";
+import { optimizeImage } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { Plus, Trash2, Edit, Loader2, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Edit, Loader2, CheckCircle, Music, Crown, Star, TrendingUp } from "lucide-react";
 import toast from "react-hot-toast";
 
 const AdminSongs = () => {
@@ -228,93 +229,141 @@ const AdminSongs = () => {
 
       {/* Edit Song Dialog */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
-        <DialogContent className="bg-base-100 shadow-xl text-white max-w-xl border border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Edit Song</DialogTitle>
+        <DialogContent className="bg-gradient-to-br from-base-200 via-base-100 to-base-200 shadow-2xl text-white max-w-2xl border-0 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-emerald-500/20 via-emerald-600/10 to-transparent" />
+          <DialogHeader className="relative">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+              <Edit className="size-6 text-emerald-400" />
+              Edit Song
+            </DialogTitle>
+            <p className="text-sm text-base-content/60">Update song details below</p>
           </DialogHeader>
 
-          <div className="space-y-5 mt-2 pb-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Title *</label>
-              <Input 
-                value={formData.title} 
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-                placeholder="Song title" 
-                className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Artist *</label>
-              <Input 
-                value={formData.artist} 
-                onChange={(e) => setFormData({ ...formData, artist: e.target.value })} 
-                placeholder="Artist name" 
-                className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Genre</label>
-              <Select value={formData.genre} onValueChange={(v) => setFormData({ ...formData, genre: v })}>
-                <SelectTrigger className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content h-12 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENRES.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Status</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="h-4 w-4 text-emerald-500 focus:ring-emerald-500"
-                  />
-                  <span className="text-sm text-base-content/70">Featured</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isTrending}
-                    onChange={(e) => setFormData({ ...formData, isTrending: e.target.checked })}
-                    className="h-4 w-4 text-orange-500 focus:ring-orange-500"
-                  />
-                  <span className="text-sm text-base-content/70">Trending</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isPremium}
-                    onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
-                    className="h-4 w-4 text-pink-500 focus:ring-pink-500"
-                  />
-                  <span className="text-sm text-base-content/70">Pro Only</span>
-                </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 pb-2">
+            <div className="md:col-span-1 space-y-4">
+              <div className="relative group">
+                <div className="aspect-square rounded-xl overflow-hidden bg-base-100 border-2 border-dashed border-white/10 group-hover:border-emerald-500/50 transition-all">
+                  {selectedSong?.imageUrl ? (
+                    <img src={optimizeImage(selectedSong.imageUrl, "lg")} alt={formData.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-base-content/40">
+                      <Music className="size-12 mb-2" />
+                      <span className="text-sm">No Image</span>
+                    </div>
+                  )}
+                </div>
+                {formData.isPremium && (
+                  <div className="absolute top-2 right-2 bg-amber-500/90 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                    <Crown className="size-3 text-black" />
+                    <span className="text-xs font-bold text-black">PRO</span>
+                  </div>
+                )}
+                {(formData.isFeatured || formData.isTrending) && (
+                  <div className="absolute bottom-2 left-2 flex gap-1">
+                    {formData.isFeatured && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Featured</span>
+                    )}
+                    {formData.isTrending && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">Trending</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-            <Button 
-              onClick={handleUpdate} 
-              disabled={isUpdating} 
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold h-12"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="size-4 mr-2" />
-                  Update Song
-                </>
-              )}
-            </Button>
+            
+            <div className="md:col-span-2 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Title</label>
+                <Input 
+                  value={formData.title} 
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+                  placeholder="Song title" 
+                  className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12 text-lg" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Artist</label>
+                <Input 
+                  value={formData.artist} 
+                  onChange={(e) => setFormData({ ...formData, artist: e.target.value })} 
+                  placeholder="Artist name" 
+                  className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Genre</label>
+                <Select value={formData.genre} onValueChange={(v) => setFormData({ ...formData, genre: v })}>
+                  <SelectTrigger className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENRES.map((g) => (
+                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Status</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/10 cursor-pointer hover:border-emerald-500/50 transition-all bg-base-100/30">
+                    <input
+                      type="checkbox"
+                      checked={formData.isFeatured}
+                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                      className="h-4 w-4 text-emerald-500 focus:ring-emerald-500 rounded"
+                    />
+                    <div>
+                      <Star className="size-4 text-emerald-400" />
+                      <span className="text-sm text-base-content/70 ml-1">Featured</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/10 cursor-pointer hover:border-orange-500/50 transition-all bg-base-100/30">
+                    <input
+                      type="checkbox"
+                      checked={formData.isTrending}
+                      onChange={(e) => setFormData({ ...formData, isTrending: e.target.checked })}
+                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 rounded"
+                    />
+                    <div>
+                      <TrendingUp className="size-4 text-orange-400" />
+                      <span className="text-sm text-base-content/70 ml-1">Trending</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/10 cursor-pointer hover:border-amber-500/50 transition-all bg-base-100/30">
+                    <input
+                      type="checkbox"
+                      checked={formData.isPremium}
+                      onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+                      className="h-4 w-4 text-amber-500 focus:ring-amber-500 rounded"
+                    />
+                    <div>
+                      <Crown className="size-4 text-amber-400" />
+                      <span className="text-sm text-base-content/70 ml-1">Pro</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
+          
+          <Button 
+            onClick={handleUpdate} 
+            disabled={isUpdating} 
+            className="w-full mt-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold h-12"
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="size-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
