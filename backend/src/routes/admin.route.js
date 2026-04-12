@@ -96,7 +96,7 @@ router.put(
 );
 router.delete("/users/:userId", protectRoute, requireAdmin, deleteUser);
 
-router.post("/songs", protectRoute, requireAdmin, createSong);
+router.post("/songs", protectRoute, requireAdmin, upload.fields([{ name: "audioFile", maxCount: 1 }, { name: "imageFile", maxCount: 1 }]), createSong);
 router.delete("/songs/:id", protectRoute, requireAdmin, deleteSong);
 router.post("/albums", protectRoute, requireAdmin, createAlbum);
 router.post(
