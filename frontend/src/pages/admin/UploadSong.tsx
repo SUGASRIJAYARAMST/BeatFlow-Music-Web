@@ -65,7 +65,7 @@ const AdminUploadSong = () => {
     const uploadToCloudinary = async (file: File, cloudName: string, folder: string, resourceType: string): Promise<string> => {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("api_key", import.meta.env.VITE_CLOUDINARY_API_KEY);
+        formData.append("api_key", "846476578239196");
         formData.append("folder", folder);
         
         const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
