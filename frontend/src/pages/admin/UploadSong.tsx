@@ -67,6 +67,7 @@ const AdminUploadSong = () => {
         formData.append("file", file);
         formData.append("api_key", "846476578239196");
         formData.append("folder", folder);
+        formData.append("upload_preset", "beatflow_upload");
         
         const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
         console.log("Uploading to:", url);
