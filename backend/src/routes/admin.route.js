@@ -18,6 +18,7 @@ import { createSong, createSongWithUrls, updateSong, deleteSong } from "../contr
 import {
   createAlbum,
   createAlbumWithSongs,
+  updateAlbum,
   deleteAlbum,
 } from "../controllers/album.controller.js";
 import {
@@ -108,6 +109,7 @@ router.post(
   albumUpload,
   createAlbumWithSongs,
 );
+router.put("/albums/:id", protectRoute, requireAdmin, updateAlbum);
 router.delete("/albums/:id", protectRoute, requireAdmin, deleteAlbum);
 
 router.get("/announcements", protectRoute, requireAdmin, getAllAnnouncements);
