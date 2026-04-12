@@ -227,80 +227,116 @@ const AdminAlbums = () => {
 
       {/* Edit Album Dialog */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
-        <DialogContent className="bg-base-100 shadow-xl text-white max-w-xl border border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Edit Album</DialogTitle>
+        <DialogContent className="bg-gradient-to-br from-base-200 via-base-100 to-base-200 shadow-2xl text-white max-w-2xl border-0 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-emerald-500/20 via-emerald-600/10 to-transparent" />
+          <DialogHeader className="relative">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+              <Edit className="size-6 text-emerald-400" />
+              Edit Album
+            </DialogTitle>
+            <p className="text-sm text-base-content/60">Update album details below</p>
           </DialogHeader>
 
-          <div className="space-y-5 mt-2 pb-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Title *</label>
-              <Input 
-                value={formData.title} 
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-                placeholder="Album title" 
-                className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Artist *</label>
-              <Input 
-                value={formData.artist} 
-                onChange={(e) => setFormData({ ...formData, artist: e.target.value })} 
-                placeholder="Artist name" 
-                className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Genre</label>
-              <Select value={formData.genre} onValueChange={(v) => setFormData({ ...formData, genre: v })}>
-                <SelectTrigger className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content h-12 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENRES.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Release Year</label>
-              <Input 
-                value={formData.releaseYear ? String(formData.releaseYear) : ""} 
-                onChange={(e) => setFormData({ ...formData, releaseYear: parseInt(e.target.value) || 0 })} 
-                placeholder="2024" 
-                className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Crown className="size-4 text-amber-400" />
-                <label className="text-sm font-medium text-base-content/70">Premium Album</label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 pb-2">
+            <div className="md:col-span-1 space-y-4">
+              <div className="relative group">
+                <div className="aspect-square rounded-xl overflow-hidden bg-base-100 border-2 border-dashed border-white/10 group-hover:border-emerald-500/50 transition-all">
+                  {selectedAlbum?.imageUrl ? (
+                    <img src={optimizeImage(selectedAlbum.imageUrl, 400)} alt={formData.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-base-content/40">
+                      <Image className="size-12 mb-2" />
+                      <span className="text-sm">No Image</span>
+                    </div>
+                  )}
+                </div>
+                {formData.isPremium && (
+                  <div className="absolute top-2 right-2 bg-amber-500/90 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                    <Crown className="size-3 text-black" />
+                    <span className="text-xs font-bold text-black">PREMIUM</span>
+                  </div>
+                )}
               </div>
-              <Switch 
-                checked={formData.isPremium} 
-                onCheckedChange={(checked) => setFormData({ ...formData, isPremium: checked })} 
-              />
             </div>
-            <Button 
-              onClick={handleUpdate} 
-              disabled={isUpdating} 
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold h-12"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="size-4 mr-2" />
-                  Update Album
-                </>
-              )}
-            </Button>
+            
+            <div className="md:col-span-2 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Title</label>
+                <Input 
+                  value={formData.title} 
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+                  placeholder="Album title" 
+                  className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12 text-lg" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Artist</label>
+                <Input 
+                  value={formData.artist} 
+                  onChange={(e) => setFormData({ ...formData, artist: e.target.value })} 
+                  placeholder="Artist name" 
+                  className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Genre</label>
+                  <Select value={formData.genre} onValueChange={(v) => setFormData({ ...formData, genre: v })}>
+                    <SelectTrigger className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GENRES.map((g) => (
+                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-emerald-400/80 uppercase tracking-wider mb-2 block">Release Year</label>
+                  <Input 
+                    value={formData.releaseYear ? String(formData.releaseYear) : ""} 
+                    onChange={(e) => setFormData({ ...formData, releaseYear: parseInt(e.target.value) || 0 })} 
+                    placeholder="2024" 
+                    className="bg-base-100/50 border-white/10 focus:border-emerald-500 text-base-content placeholder:text-base-content/40 h-12" 
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500/10 to-transparent rounded-xl border border-amber-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/20 rounded-lg">
+                    <Crown className="size-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Premium Album</p>
+                    <p className="text-xs text-base-content/50">Only Pro users can access</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={formData.isPremium} 
+                  onCheckedChange={(checked) => setFormData({ ...formData, isPremium: checked })} 
+                />
+              </div>
+            </div>
           </div>
+          
+          <Button 
+            onClick={handleUpdate} 
+            disabled={isUpdating} 
+            className="w-full mt-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold h-12"
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="size-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
