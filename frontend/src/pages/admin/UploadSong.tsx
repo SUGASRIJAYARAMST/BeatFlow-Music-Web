@@ -62,15 +62,11 @@ const AdminUploadSong = () => {
         }
     };
 
-    const uploadToCloudinary = async (file: File, params: any, cloudName: string): Promise<string> => {
+    const uploadToCloudinary = async (file: File, cloudName: string, folder: string, resourceType: string): Promise<string> => {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("api_key", params.api_key);
-        formData.append("timestamp", params.timestamp);
-        formData.append("signature", params.signature);
-        formData.append("folder", params.folder);
-        
-        const resourceType = params.resource_type || "video";
+        formData.append("api_key", import.meta.env.VITE_CLOUDINARY_API_KEY);
+        formData.append("folder", folder);
         
         const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
             method: "POST",
@@ -92,10 +88,8 @@ const AdminUploadSong = () => {
         setUploadProgress(0);
         
         try {
-            console.log("📤 Getting signed upload URLs...");
-            
-            const signResponse = await axiosInstance.get("/cloudinary/sign-upload");
-            const { cloud_name, api_key, audio: audioParams, image: imageParams } = signResponse.data;
+            const configResponse = await axiosInstance.get("/cloudinary/sign-upload");
+            const { cloud_name, api_key } = configResponse.data;
             
             console.log("📤 Uploading song:", { 
               title: formData.title, 
@@ -106,8 +100,8 @@ const AdminUploadSong = () => {
 
             setUploadProgress(10);
             
-            const audioUrlPromise = uploadToCloudinary(audioFile, { ...audioParams, api_key }, cloud_name);
-            const imageUrlPromise = uploadToCloudinary(imageFile, { ...imageParams, api_key, resource_type: "image" }, cloud_name);
+            const audioUrlPromise = uploadToCloudinary(audioFile, cloud_name, "beatflow/songs", "video");
+            const imageUrlPromise = uploadToCloudinary(imageFile, cloud_name, "beatflow/images", "image");
             
             const [audioUrl, imageUrl] = await Promise.all([audioUrlPromise, imageUrlPromise]);
             
