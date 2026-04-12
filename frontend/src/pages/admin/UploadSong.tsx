@@ -68,13 +68,18 @@ const AdminUploadSong = () => {
         formData.append("api_key", "846476578239196");
         formData.append("folder", folder);
         
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+        const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+        console.log("Uploading to:", url);
+        
+        const response = await fetch(url, {
             method: "POST",
             body: formData,
         });
         
         if (!response.ok) {
-            throw new Error(`Upload failed: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error("Cloudinary error:", errorText);
+            throw new Error(`Upload failed: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
