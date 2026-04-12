@@ -14,7 +14,7 @@ import {
   verifyQrPayment,
   getPendingQrPayments,
 } from "../controllers/admin.controller.js";
-import { createSong, deleteSong } from "../controllers/song.controller.js";
+import { createSong, createSongWithUrls, deleteSong } from "../controllers/song.controller.js";
 import {
   createAlbum,
   createAlbumWithSongs,
@@ -97,6 +97,7 @@ router.put(
 router.delete("/users/:userId", protectRoute, requireAdmin, deleteUser);
 
 router.post("/songs", protectRoute, requireAdmin, upload.fields([{ name: "audioFile", maxCount: 1 }, { name: "imageFile", maxCount: 1 }]), createSong);
+router.post("/songs/with-urls", protectRoute, requireAdmin, createSongWithUrls);
 router.delete("/songs/:id", protectRoute, requireAdmin, deleteSong);
 router.post("/albums", protectRoute, requireAdmin, createAlbum);
 router.post(

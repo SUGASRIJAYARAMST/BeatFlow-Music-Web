@@ -31,6 +31,7 @@ import walletRoutes from "./routes/wallet.route.js";
 import sseRoutes, { broadcastEvent } from "./routes/sse.route.js";
 import pinResetRoutes from "./routes/pinReset.route.js";
 import feedbackRoutes from "./routes/feedback.route.js";
+import cloudinaryRoutes from "./routes/cloudinary.route.js";
 import { protectRoute, requireAdmin } from "./middleware/auth.middleware.js";
 import {
   getPinResetRequests,
@@ -171,6 +172,7 @@ const startServer = async () => {
   app.use("/api/sse", sseRoutes);
   app.use("/api/pin-reset", pinResetRoutes);
   app.use("/api/feedback", feedbackRoutes);
+    app.use("/api/cloudinary", cloudinaryRoutes);
   app.get(
     "/api/admin/pin-requests",
     protectRoute,

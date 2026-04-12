@@ -418,6 +418,60 @@ const allowedImageTypes = [
   }
 };
 
+export const createSongWithUrls = async (req, res, next) => {
+  try {
+    const { title, artist, genre, duration, isPremium, audioUrl, imageUrl } = req.body;
+
+    if (!title || !artist || !audioUrl || !imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, artist, audioUrl, and imageUrl are required",
+      });
+    }
+
+    console.log("Received song data (URL mode):", { title, artist, genre, duration, isPremium, audioUrl, imageUrl });
+
+    const existingSong = await Song.findOne({
+      title: { $regex: new RegExp(`^${title}$`, "i") },
+      artist: { $regex: new RegExp(`^${artist}$`, "i") },
+    });
+
+    if (existingSong) {
+      return res.status(400).json({
+        success: false,
+        message: "This song already exists!",
+      });
+    }
+
+    const song = new Song({
+      title,
+      artist,
+      genre: genre || "Other",
+      duration: parseInt(duration) || 0,
+      audioUrl,
+      imageUrl,
+      albumId: null,
+      isFeatured: false,
+      isTrending: false,
+      isPremium: isPremium === "true" || isPremium === true,
+    });
+
+    await song.save();
+
+    global.cache?.del("all_songs");
+    global.cache?.del("featured_songs");
+    global.cache?.del("trending_songs");
+    global.cache?.del("made_for_you");
+    global.cache?.del("recent_songs");
+
+    console.log("✅ Song created with URLs:", song._id, song.title);
+    res.status(201).json({ message: "Song created successfully", song });
+  } catch (error) {
+    console.error("❌ Error in createSongWithUrls:", error);
+    next(error);
+  }
+};
+
 export const updateSong = async (req, res, next) => {
   try {
     // Authorization check - only admin can update songs

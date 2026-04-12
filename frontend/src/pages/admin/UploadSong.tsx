@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Switch } from "../../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Upload, Loader2, Plus, X, Crown, Music } from "lucide-react";
+import { Upload, Loader2, Crown } from "lucide-react";
 import { useMusicStore } from "../../stores/useMusicStore";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
@@ -20,6 +20,7 @@ const AdminUploadSong = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const { fetchSongs, fetchAllHomeData } = useMusicStore();
     const audioInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -31,12 +32,10 @@ const AdminUploadSong = () => {
         window.addEventListener("beforeunload", handleBeforeUnload);
         return () => window.removeEventListener("beforeunload", handleBeforeUnload);
     }, [isUploading]);
-    const imageInputRef = useRef<HTMLInputElement>(null);
 
     const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] || null;
         
-        // Check if file size exceeds 10MB
         if (file && file.size > 10 * 1024 * 1024) {
             toast.error("Audio file is too large. Please select a file smaller than 10MB.");
             setAudioFile(null);
@@ -63,20 +62,40 @@ const AdminUploadSong = () => {
         }
     };
 
+    const uploadToCloudinary = async (file: File, params: any, cloudName: string): Promise<string> => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("api_key", params.api_key);
+        formData.append("timestamp", params.timestamp);
+        formData.append("signature", params.signature);
+        formData.append("folder", params.folder);
+        
+        const resourceType = params.resource_type || "video";
+        
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+            method: "POST",
+            body: formData,
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Upload failed: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        return data.secure_url;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!audioFile || !imageFile) return toast.error("Please select both audio and image files");
         setIsUploading(true);
         setUploadProgress(0);
+        
         try {
-            const data = new FormData();
-            data.append("title", formData.title); 
-            data.append("artist", formData.artist); 
-            data.append("genre", formData.genre);
-            data.append("duration", duration ? String(duration) : "0");
-            data.append("isPremium", String(formData.isPremium));
-            data.append("audioFile", audioFile); 
-            data.append("imageFile", imageFile);
+            console.log("📤 Getting signed upload URLs...");
+            
+            const signResponse = await axiosInstance.get("/cloudinary/sign-upload");
+            const { cloud_name, api_key, audio: audioParams, image: imageParams } = signResponse.data;
             
             console.log("📤 Uploading song:", { 
               title: formData.title, 
@@ -84,22 +103,35 @@ const AdminUploadSong = () => {
               duration,
               fileSize: audioFile.size
             });
+
+            setUploadProgress(10);
             
-            const uploadResponse = await axiosInstance.post("/admin/songs", data, {
-                headers: { "Content-Type": "multipart/form-data" },
-                timeout: 180000, // 3 minutes timeout for large files
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
-                    setUploadProgress(percentCompleted);
-                }
-            });
+            const audioUrlPromise = uploadToCloudinary(audioFile, { ...audioParams, api_key }, cloud_name);
+            const imageUrlPromise = uploadToCloudinary(imageFile, { ...imageParams, api_key, resource_type: "image" }, cloud_name);
             
-            console.log("✅ Upload response received:", uploadResponse.data);
+            const [audioUrl, imageUrl] = await Promise.all([audioUrlPromise, imageUrlPromise]);
+            
+            setUploadProgress(90);
+            console.log("✅ Files uploaded to Cloudinary:", { audioUrl, imageUrl });
+
+            console.log("📤 Creating song record in database...");
+            
+            const songResponse = await axiosInstance.post("/admin/songs/with-urls", {
+                title: formData.title,
+                artist: formData.artist,
+                genre: formData.genre,
+                duration: duration || 0,
+                isPremium: formData.isPremium,
+                audioUrl,
+                imageUrl,
+            }, { timeout: 30000 });
+            
+            setUploadProgress(100);
+            console.log("✅ Upload response received:", songResponse.data);
             
             toast.success("Song uploaded successfully!");
             await fetchSongs(true);
             navigate("/admin/songs");
-            console.log("✅ Data refresh complete!");
             
             setFormData({ title: "", artist: "", genre: "Other", isPremium: false });
             setAudioFile(null); 
@@ -110,11 +142,10 @@ const AdminUploadSong = () => {
             if (imageInputRef.current) imageInputRef.current.value = "";
         } catch (error: any) { 
             console.error("Upload error:", error);
-            // Show detailed error for debugging
             const errorMessage = error.response?.data?.message 
                 || error.response?.data?.error 
                 || error.message 
-                || "Upload failed - please check file formats and try again";
+                || "Upload failed";
             toast.error(errorMessage);
             setUploadProgress(0);
         } finally { setIsUploading(false); }
@@ -153,18 +184,17 @@ const AdminUploadSong = () => {
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-base-content/70 mb-4.5 block">Cover Image *</label>
                         <Input ref={imageInputRef} type="file" accept="image/*" onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-            
-            // Check if file size exceeds 10MB
-            if (file && file.size > 10 * 1024 * 1024) {
-                toast.error("Image file is too large. Please select a file smaller than 10MB.");
-                setImageFile(null);
-                if (imageInputRef.current) imageInputRef.current.value = "";
-                return;
-            }
-            
-            setImageFile(file);
-        }} className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content file:text-emerald-400 h-12 pt-2" />
+                            const file = e.target.files?.[0] || null;
+                            
+                            if (file && file.size > 10 * 1024 * 1024) {
+                                toast.error("Image file is too large. Please select a file smaller than 10MB.");
+                                setImageFile(null);
+                                if (imageInputRef.current) imageInputRef.current.value = "";
+                                return;
+                            }
+                            
+                            setImageFile(file);
+                        }} className="bg-base-200 border border-white/10 focus:border-emerald-500 text-base-content file:text-emerald-400 h-12 pt-2" />
                     </div>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-base-200/50 rounded-lg border border-amber-500/20">
@@ -180,7 +210,7 @@ const AdminUploadSong = () => {
                 {isUploading && uploadProgress > 0 && (
                     <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                            <span className="text-base-content/70">Uploading...</span>
+                            <span className="text-base-content/70">Uploading to Cloud...</span>
                             <span className="text-emerald-400 font-medium">{uploadProgress}%</span>
                         </div>
                         <div className="w-full h-2 bg-base-200 rounded-full overflow-hidden">
