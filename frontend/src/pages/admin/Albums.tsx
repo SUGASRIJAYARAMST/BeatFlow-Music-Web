@@ -6,8 +6,8 @@ import { removeRecentSong, clearRecentSongs } from "../../utils/recentSongs";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { Plus, Trash2, Edit, Loader2, CheckCircle, Image, Crown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
+import { Plus, Trash2, Edit, Loader2, CheckCircle, Image, Crown, AlertTriangle } from "lucide-react";
 import { Switch } from "../../components/ui/switch";
 import toast from "react-hot-toast";
 import { optimizeImage } from "../../lib/utils";
@@ -17,6 +17,8 @@ const AdminAlbums = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [albumToDelete, setAlbumToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<Album>({
     _id: "",
     title: "",
@@ -91,9 +93,15 @@ const AdminAlbums = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setAlbumToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDelete = async () => {
+    if (!albumToDelete) return;
     try {
-      const album = albums.find(a => a._id === id);
+      const album = albums.find(a => a._id === albumToDelete);
       const songIds = album?.songs?.map(s => s._id) || [];
       
       const playerStore = usePlayerStore.getState();
@@ -112,8 +120,10 @@ const AdminAlbums = () => {
       }
       songIds.forEach(songId => removeRecentSong(songId, playerStore.userId));
       
-      await deleteAlbum(id);
+      await deleteAlbum(albumToDelete);
       toast.success("Album deleted successfully");
+      setShowDeleteConfirm(false);
+      setAlbumToDelete(null);
     } catch (error: any) {
       toast.error(error.message || "Failed to delete album");
     }
@@ -212,7 +222,7 @@ const AdminAlbums = () => {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => handleDelete(album._id)}
+                      onClick={() => handleDeleteClick(album._id)}
                       className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                     >
                       <Trash2 className="size-4" />
@@ -224,6 +234,38 @@ const AdminAlbums = () => {
           )}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-gradient-to-br from-base-200 via-base-100 to-base-200 shadow-2xl text-white max-w-md border-0 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-red-500/20 via-red-600/10 to-transparent" />
+          <DialogHeader className="relative">
+            <DialogTitle className="text-xl font-bold flex items-center gap-3">
+              <AlertTriangle className="size-6 text-red-400" />
+              Delete Album
+            </DialogTitle>
+            <DialogDescription className="text-base-content/70">
+              Are you sure you want to delete this album? All songs in this album will also be removed. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-3 mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDeleteConfirm(false)}
+              className="flex-1 border-white/10 hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleDelete}
+              className="flex-1 bg-red-500 hover:bg-red-400 text-white font-bold"
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Album Dialog */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
