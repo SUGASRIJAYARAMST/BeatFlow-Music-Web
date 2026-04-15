@@ -9,7 +9,7 @@ import Topbar from "../../components/layout/Topbar";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Switch } from "../../components/ui/switch";
 import { Button } from "../../components/ui/button";
-import { User, Bell, CreditCard, LogOut, Clock, Heart, ListMusic, Crown, Calendar, Timer, Languages, RotateCcw, Pencil, ExternalLink, Key, ChevronRight, Eye, EyeOff, CheckCircle, XCircle, Hourglass, Camera, Crop, X, Upload, KeyRound, ShieldCheck, Loader2, Headphones, Copy, Mail, Star, Send, MessageSquare } from "lucide-react";
+import { User, Bell, CreditCard, LogOut, Clock, Heart, ListMusic, Crown, Calendar, Timer, Languages, RotateCcw, Pencil, ExternalLink, Key, ChevronRight, Eye, EyeOff, CheckCircle, XCircle, Hourglass, Camera, X, Upload, KeyRound, ShieldCheck, Loader2, Headphones, Copy, Mail, Star, Send, MessageSquare } from "lucide-react";
 import { useUser, useClerk } from "@clerk/react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../../lib/axios";
@@ -65,8 +65,6 @@ const ProfilePage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [currentPassError, setCurrentPassError] = useState(false);
-    const [showCropModal, setShowCropModal] = useState(false);
-    const [cropImage, setCropImage] = useState<string | null>(null);
     const [showImageOptions, setShowImageOptions] = useState(false);
     const [viewImage, setViewImage] = useState(false);
     const [showLangDropdown, setShowLangDropdown] = useState(false);
@@ -264,40 +262,14 @@ const ProfilePage = () => {
             return;
         }
 
-        const img = new Image();
-        const reader = new FileReader();
-        reader.onload = () => {
-            img.src = reader.result as string;
-        };
-        img.onload = () => {
-            if (img.width < 300 || img.height < 300) {
-                toast.error("Image must be at least 300x300 pixels");
-                return;
-            }
-            setCropImage(reader.result as string);
-            setShowCropModal(true);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleCropComplete = async (croppedCanvas: HTMLCanvasElement) => {
         try {
             setSaving(true);
-            croppedCanvas.toBlob(async (blob) => {
-                if (!blob) return;
-                const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
-
-                // Add loading spinner feedback
-                toast.loading("Uploading profile picture...");
-
-                await user?.setProfileImage({ file });
-                toast.dismiss();
-                toast.success("Profile picture updated!");
-                setShowCropModal(false);
-                setCropImage(null);
-                await fetchUserProfile();
-                window.location.reload();
-            }, "image/jpeg", 0.95); // High-quality compression
+            toast.loading("Uploading profile picture...");
+            await user?.setProfileImage({ file });
+            toast.dismiss();
+            toast.success("Profile picture updated!");
+            await fetchUserProfile();
+            window.location.reload();
         } catch (error: any) {
             toast.dismiss();
             toast.error(error.message || "Failed to update profile picture");
@@ -1226,141 +1198,5 @@ const ProfilePage = () => {
                     </div>
                 </div>
             )}
-
-            {/* Crop Modal */}
-            {showCropModal && cropImage && (
-                <CropModal imageSrc={cropImage} onComplete={handleCropComplete} onCancel={() => { setShowCropModal(false); setCropImage(null); }} />
-            )}
-        </div>
-    );
-};
-
-const CropModal = ({ imageSrc, onComplete, onCancel }: { imageSrc: string; onComplete: (canvas: HTMLCanvasElement) => void; onCancel: () => void }) => {
-    const [zoom, setZoom] = useState(1);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
-    const [dragging, setDragging] = useState(false);
-    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-    const imgRef = useRef<HTMLImageElement>(null);
-
-    const handleDown = (clientX: number, clientY: number) => {
-        setDragging(true);
-        setStartPos({ x: clientX - offset.x, y: clientY - offset.y });
-    };
-
-    const handleMove = (clientX: number, clientY: number) => {
-        if (!dragging) return;
-        setOffset({ x: clientX - startPos.x, y: clientY - startPos.y });
-    };
-
-    const handleUp = () => setDragging(false);
-
-    const handleCrop = () => {
-        const img = imgRef.current;
-        if (!img) return;
-
-        const size = 300;
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-        ctx.clip();
-
-        const containerSize = 256;
-        const imgAspect = img.naturalWidth / img.naturalHeight;
-        let renderW: number, renderH: number;
-        
-        if (imgAspect > 1) {
-            renderH = 256 * zoom;
-            renderW = renderH * imgAspect;
-        } else {
-            renderW = 256 * zoom;
-            renderH = renderW / imgAspect;
-        }
-
-        const scale = size / containerSize;
-        const drawX = (size - renderW * scale) / 2 + offset.x * scale;
-        const drawY = (size - renderH * scale) / 2 + offset.y * scale;
-
-        ctx.drawImage(img, drawX, drawY, renderW * scale, renderH * scale);
-        onComplete(canvas);
-    };
-
-    return (
-        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onCancel}>
-            <div className="bg-[#1a1a1a] rounded-2xl p-6 max-w-sm w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Crop className="size-5 text-emerald-400" /> Crop Profile Picture
-                    </h3>
-                    <button onClick={onCancel} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
-                        <X className="size-5 text-gray-400" />
-                    </button>
-                </div>
-
-                <div
-                    className="w-48 h-48 mx-auto rounded-full overflow-hidden cursor-move relative"
-                    onMouseDown={(e) => handleDown(e.clientX, e.clientY)}
-                    onMouseMove={(e) => handleMove(e.clientX, e.clientY)}
-                    onMouseUp={handleUp}
-                    onMouseLeave={handleUp}
-                    onTouchStart={(e) => handleDown(e.touches[0].clientX, e.touches[0].clientY)}
-                    onTouchMove={(e) => handleMove(e.touches[0].clientX, e.touches[0].clientY)}
-                    onTouchEnd={handleUp}
-                >
-                    <div
-                        className="absolute inset-0 flex items-center justify-center"
-                        style={{
-                            transform: `translate(${offset.x}px, ${offset.y}px)`,
-                            transition: dragging ? "none" : "transform 0.1s ease-out"
-                        }}
-                    >
-                        <img
-                            ref={imgRef}
-                            src={imageSrc}
-                            alt="Crop"
-                            style={{
-                                maxWidth: "none",
-                                width: `${256 * zoom}px`,
-                                height: `${256 * zoom}px`,
-                                objectFit: "cover"
-                            }}
-                            draggable={false}
-                        />
-                    </div>
-                    <div className="absolute inset-0 rounded-full border-2 border-white/30 pointer-events-none" />
-                </div>
-
-                <div className="mt-4">
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400">Zoom</span>
-                        <input
-                            type="range"
-                            min="0.5"
-                            max="1.5"
-                            step="0.05"
-                            value={zoom}
-                            onChange={(e) => setZoom(parseFloat(e.target.value))}
-                            className="flex-1 accent-emerald-500"
-                        />
-                        <span className="text-xs text-gray-400 w-8 text-right">{Math.round(zoom * 100)}%</span>
-                    </div>
-                </div>
-
-                <div className="flex gap-3 mt-4">
-                    <button onClick={onCancel} className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium transition-colors">
-                        Cancel
-                    </button>
-                    <button onClick={handleCrop} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 rounded-lg text-black font-bold transition-colors">
-                        Apply
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 export default ProfilePage;
