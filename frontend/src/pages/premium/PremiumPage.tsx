@@ -305,7 +305,7 @@ const ProPage = () => {
                                 >
                                     <div className='flex items-center gap-3'>
                                         <WalletIcon className={`size-6 ${paymentMethod === "wallet" ? "text-emerald-400" : "text-gray-400"}`} />
-                                        <div className='text-center'>
+                                        <div className='text-left'>
                                             <p className={`font-bold ${paymentMethod === "wallet" ? "text-emerald-400" : "text-white"}`}>Wallet</p>
                                             <p className='text-xs text-gray-400'>Balance: ₹{(walletBalance ?? 0).toFixed(2)}</p>
                                         </div>
