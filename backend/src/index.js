@@ -88,7 +88,8 @@ const startServer = async () => {
 
   const allowedOrigins = [
     "https://beatflow-26.vercel.app",
-    "https://beatflow-5hmlrw609-sugasrijayaramsts-projects.vercel.app"
+    "https://beatflow-5hmlrw609-sugasrijayaramsts-projects.vercel.app",
+    "https://beatflow-music-web.onrender.com",
   ];
 
   app.use(

@@ -311,7 +311,7 @@ const ProPage = () => {
                                         </div>
                                     </div>
                                 </button>
-                                <button
+                                {/* <button
                                     onClick={() => setPaymentMethod("card")}
                                     className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                                         paymentMethod === "card"
@@ -326,7 +326,7 @@ const ProPage = () => {
                                             <p className='text-xs text-gray-400'>Test Mode</p>
                                         </div>
                                     </div>
-                                </button>
+                                </button> */}
                             </div>
                             
                             {paymentMethod === "wallet" && !hasEnoughBalance && (

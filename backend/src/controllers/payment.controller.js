@@ -138,8 +138,11 @@ export const createOrder = async (req, res, next) => {
   } catch (error) {
     const errorData = error.response?.data || error.message;
     console.error("Cashfree order creation error:", errorData);
+    console.error("CASHFREE_APP_ID exists:", !!APP_ID);
+    console.error("CASHFREE_SECRET_KEY exists:", !!SECRET_KEY);
     res.status(error.response?.status || 500).json({
       message: "Failed to create payment order",
+      error: errorData,
     });
   }
 };

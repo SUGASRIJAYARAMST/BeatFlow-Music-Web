@@ -6,30 +6,24 @@ export const protectRoute = async (req, res, next) => {
     let userId = null;
     let userEmail = null;
     
-    // First try Clerk SDK
     const auth = getAuth(req);
     if (auth?.userId) {
       userId = auth.userId;
       console.log("✅ Auth via Clerk SDK:", userId);
     }
     
-    // Fallback: Accept Bearer token from headers if Clerk token not found
-    // This allows testing with curl, Postman, and other clients
     if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
       try {
         const token = req.headers.authorization.slice(7);
-        // Check if it looks like a Clerk user ID (starts with user_)
         if (token.startsWith("user_")) {
           userId = token;
           console.log("✅ Auth via Bearer token:", userId);
         }
       } catch (e) {
-        // Ignore token parsing errors, continue to unauthorized response
       }
     }
 
     if (!userId) {
-      // Debug info
       console.warn("❌ Auth failed - no userId found");
       console.warn("Clerk auth:", auth);
       console.warn("Authorization header:", req.headers.authorization ? "present" : "missing");
@@ -39,7 +33,20 @@ export const protectRoute = async (req, res, next) => {
     }
 
     req.userId = userId;
-    const user = await User.findOne({ clerkId: userId }).lean();
+    let user = await User.findOne({ clerkId: userId }).lean();
+    
+    if (!user) {
+      console.log(`Auto-creating user for clerkId: ${userId}`);
+      const newUser = await User.create({
+        clerkId: userId,
+        fullName: "BeatFlow User",
+        email: auth?.email || "unknown@beatflow.app",
+        role: "user",
+        isPremium: false,
+      });
+      user = newUser.toObject();
+    }
+    
     req.user = user;
     req.userEmail = user?.email || userEmail;
     next();
