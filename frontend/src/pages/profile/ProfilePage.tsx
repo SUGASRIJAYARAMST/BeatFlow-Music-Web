@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback,useRef } from "react";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { useMusicStore } from "../../stores/useMusicStore";
@@ -438,7 +438,7 @@ const ProfilePage = () => {
                         <p className="text-gray-400">{t("profile_subtitle")}</p>
                     </div>
 
-                    {viewImage && authUser?.imageUrl && (
+{viewImage && authUser?.imageUrl && (
                         <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4" onClick={() => setViewImage(false)}>
                             <div className="glass-dark rounded-2xl p-4 border border-white/20 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex justify-end mb-2">
@@ -452,12 +452,12 @@ const ProfilePage = () => {
                                         alt={authUser.fullName || "Profile"} 
                                         className="w-full h-full object-cover"
                                     />
-                </div>
-            </div>
-        </div>
-    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-    {showForgotPin && (
+                    {showForgotPin && (
         <div className='fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50'>
             <div className='bg-[#1a1a1a] rounded-2xl max-w-md w-full mx-4 border border-white/10 shadow-2xl overflow-hidden'>
                 {forgotPinStep === "pin" ? (
@@ -1198,5 +1198,9 @@ const ProfilePage = () => {
                     </div>
                 </div>
             )}
+
+        </div>
+    );
+};
 
 export default ProfilePage;
