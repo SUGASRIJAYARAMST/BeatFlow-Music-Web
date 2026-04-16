@@ -27,3 +27,11 @@ Thumbs.db
 # Temp files
 tmp/
 temp/
+
+frontend/public/Diagrams
+
+Diagrams/
+
+# Production documentation (internal reference only)
+PRODUCTION_UPGRADE_GUIDE.md
+
