@@ -332,6 +332,8 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
                         : state.likedSongs.filter(s => s._id !== songId)
                 }));
                 toast.error(response.data.message || "Failed to update like");
+            } else {
+                toast.success(response.data.isLiked ? `Liked "${songTitle}"` : `Unliked "${songTitle}"`);
             }
         } catch (error: any) {
             set((state) => ({
