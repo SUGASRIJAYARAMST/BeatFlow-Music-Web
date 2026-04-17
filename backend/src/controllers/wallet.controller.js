@@ -8,7 +8,7 @@ import axios from "axios";
 
 const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID;
 const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-const CASHFREE_TEST_MODE = process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test" || process.env.NODE_ENV === "development";
+const CASHFREE_TEST_MODE = !CASHFREE_APP_ID || !CASHFREE_SECRET_KEY || process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test";
 
 const PRICING = {
   daily: { days: 1 },
