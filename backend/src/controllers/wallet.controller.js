@@ -57,15 +57,11 @@ export const addMoney = async (req, res, next) => {
     const { userId: clerkId } = req;
     const { amount } = req.body;
 
-    console.log("addMoney called:", { clerkId, amount });
-
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: "Invalid amount" });
     }
 
     const user = await User.findOne({ clerkId });
-    console.log("User found:", user ? "yes" : "no", user?._id);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -88,18 +84,6 @@ export const addMoney = async (req, res, next) => {
     }
 
     const orderId = `WF_${clerkId}_${Date.now()}`;
-    console.log("Creating payment record:", { orderId, amount });
-
-    await Payment.create({
-      userId: user._id,
-      clerkId,
-      plan: "wallet_topup",
-      amount: Number(amount),
-      cashfreeOrderId: orderId,
-      status: "pending",
-    });
-
-    console.log("Payment record created successfully");
 
     if (CASHFREE_TEST_MODE) {
       return res.status(200).json({
