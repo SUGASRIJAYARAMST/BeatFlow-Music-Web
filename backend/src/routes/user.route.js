@@ -8,6 +8,7 @@ import PasswordChangeRequest from "../models/passwordChangeRequest.model.js";
 import {
   getAllUsers,
   getCurrentUser,
+  getCurrentUserOptimized,
   updateUserSettings,
   toggleLike,
   getLikedSongs,
@@ -21,6 +22,7 @@ import {
 const router = Router();
 router.get("/", protectRoute, getAllUsers);
 router.get("/profile", protectRoute, getCurrentUser);
+router.get("/me", protectRoute, getCurrentUserOptimized);
 router.put("/settings", protectRoute, updateUserSettings);
 router.post("/like", protectRoute, toggleLike);
 router.get("/liked-songs", protectRoute, getLikedSongs);

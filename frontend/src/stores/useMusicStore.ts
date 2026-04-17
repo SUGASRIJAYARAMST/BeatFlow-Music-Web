@@ -32,6 +32,7 @@ interface MusicStore {
     deleteSong: (id: string) => Promise<void>;
     deleteAlbum: (id: string) => Promise<void>;
     fetchLikedSongs: () => Promise<void>;
+    setLikedSongs: (songs: Song[]) => void;
     toggleLike: (songId: string) => Promise<void>;
     updateSongInCache: (updatedSong: Song) => void;
     search: (query: string, signal?: AbortSignal) => Promise<void>;
@@ -301,6 +302,10 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
         } finally {
             set({ isLoading: false });
         }
+    },
+
+    setLikedSongs: (songs) => {
+        set({ likedSongs: songs });
     },
 
     toggleLike: async (songId) => {

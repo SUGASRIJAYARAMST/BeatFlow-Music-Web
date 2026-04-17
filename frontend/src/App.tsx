@@ -1,6 +1,7 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useUser, useAuth } from "@clerk/react";
+import { useUser, useAuth, AuthenticateWithRedirectCallback } from "@clerk/react";
+import { lazy, Suspense, useEffect } from "react";
 import { useAuthStore } from "./stores/useAuthStore";
 import MainLayout from "./layout/MainLayout";
 import AdminLayout from "./layout/AdminLayout";
@@ -11,53 +12,38 @@ import PlaylistPage from "./pages/playlist/PlaylistPage";
 import PlaylistDetailPage from "./pages/playlist/PlaylistDetailPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import LikedSongsPage from "./pages/liked-songs/LikedSongsPage";
-
-
 import AlbumPage from "./pages/album/AlbumPage";
 import AuthCallbackPage from "./pages/auth-callback/AuthCallbackPage";
 import LandingPage from "./pages/landing/LandingPage";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminUploadSong from "./pages/admin/UploadSong";
-import AdminUploadAlbum from "./pages/admin/UploadAlbum";
-import AdminAnnouncements from "./pages/admin/Announcements";
-import AdminUsers from "./pages/admin/Users";
-import AdminSubscriptions from "./pages/admin/Subscriptions";
-import AdminSettings from "./pages/admin/Settings";
-import AdminPasswordRequests from "./pages/admin/PasswordRequests";
-import AdminSongs from "./pages/admin/Songs";
-import AdminAlbums from "./pages/admin/Albums";
-import AdminOffer from "./pages/admin/Offer";
-import AdminFeedback from "./pages/admin/Feedback";
-
 import WalletPage from "./pages/wallet/WalletPage";
 import NotFoundPage from "./pages/404/NotFoundPage";
-import { AuthenticateWithRedirectCallback } from "@clerk/react";
-import { useEffect } from "react";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { useSSE } from "./hooks/useSSE";
-import { useNotificationStore } from "./stores/useNotificationStore";
+
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminUploadSong = lazy(() => import("./pages/admin/UploadSong"));
+const AdminUploadAlbum = lazy(() => import("./pages/admin/UploadAlbum"));
+const AdminAnnouncements = lazy(() => import("./pages/admin/Announcements"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/Subscriptions"));
+const AdminSettings = lazy(() => import("./pages/admin/Settings"));
+const AdminPasswordRequests = lazy(() => import("./pages/admin/PasswordRequests"));
+const AdminSongs = lazy(() => import("./pages/admin/Songs"));
+const AdminAlbums = lazy(() => import("./pages/admin/Albums"));
+const AdminOffer = lazy(() => import("./pages/admin/Offer"));
+const AdminFeedback = lazy(() => import("./pages/admin/Feedback"));
+
+const AdminPageLoader = () => (
+    <div className="flex items-center justify-center h-screen bg-base-300">
+        <div className="loading loading-spinner loading-lg text-primary"></div>
+    </div>
+);
 
 function App() {
   const { user } = useUser();
-  const { userId } = useAuth();
   const isAdmin = useAuthStore((state) => state.isAdmin);
-  const checkAdminStatus = useAuthStore((state) => state.checkAdminStatus);
-  const fetchUserProfile = useAuthStore((state) => state.fetchUserProfile);
-  const fetchNotifications = useNotificationStore(
-    (state) => state.fetchNotifications,
-  );
 
   useSSE();
-
-  useEffect(() => {
-    if (userId) {
-      checkAdminStatus();
-      fetchUserProfile();
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [userId]);
 
   return (
     <ErrorBoundary>
@@ -79,7 +65,7 @@ function App() {
 
         <Route path="/admin" element={isAdmin && user ? <AdminLayout /> : <Navigate to="/" replace />}>
           {isAdmin && user && (
-            <>
+            <Suspense fallback={<AdminPageLoader />}>
               <Route index element={<AdminDashboard />} />
               <Route path="upload-song" element={<AdminUploadSong />} />
               <Route path="upload-album" element={<AdminUploadAlbum />} />
@@ -88,14 +74,11 @@ function App() {
               <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="subscriptions" element={<AdminSubscriptions />} />
-              <Route
-                path="password-requests"
-                element={<AdminPasswordRequests />}
-              />
+              <Route path="password-requests" element={<AdminPasswordRequests />} />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="offer" element={<AdminOffer />} />
               <Route path="feedback" element={<AdminFeedback />} />
-            </>
+            </Suspense>
           )}
         </Route>
 
@@ -107,7 +90,6 @@ function App() {
           <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/liked-songs" element={<LikedSongsPage />} />
-          {/*<Route path='/library' element={<LibraryPage />} />*/}
           <Route path="/wallet" element={<WalletPage />} />
           <Route path="/albums/:albumId" element={<AlbumPage />} />
         </Route>

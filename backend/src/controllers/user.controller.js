@@ -116,6 +116,47 @@ export const getCurrentUser = async (req, res, next) => {
   }
 };
 
+export const getCurrentUserOptimized = async (req, res, next) => {
+  try {
+    const start = Date.now();
+    const user = await User.findOne({ clerkId: req.userId })
+      .select("-walletPin -previousPassword -passwordChangeExpiry")
+      .populate({
+        path: "likedSongs",
+        options: { sort: { createdAt: -1 }, limit: 50 },
+      })
+      .lean();
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    const responseTime = Date.now() - start;
+    if (responseTime > 100) {
+      console.log(`getCurrentUserOptimized took ${responseTime}ms - may need optimization`);
+    }
+    
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        imageUrl: user.imageUrl,
+        email: user.email,
+        clerkId: user.clerkId,
+        isPremium: user.isPremium,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionExpiry: user.subscriptionExpiry,
+        role: user.role,
+        notifications: user.notifications,
+        createdAt: user.createdAt,
+      },
+      isAdmin: user.role === "admin",
+      likedSongs: user.likedSongs || [],
+      expiryTimestamp: user.subscriptionExpiry ? new Date(user.subscriptionExpiry).getTime() : null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateUserSettings = async (req, res, next) => {
   try {
     const { notifications, fullName, imageUrl } = req.body;

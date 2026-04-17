@@ -2,7 +2,6 @@ import { useUser } from "@clerk/react";
 import { useNotificationStore } from "../stores/useNotificationStore";
 import { useAuthStore } from "../stores/useAuthStore";
 import { useEffect, useRef } from "react";
-import { axiosInstance } from "../lib/axios";
 
 export const useSSE = () => {
     const { user } = useUser();
@@ -39,8 +38,6 @@ export const useSSE = () => {
                         data.event === 'password-change-approved' || data.event === 'password-change-rejected' ||
                         data.event === 'pin-reset-approved' || data.event === 'pin-reset-rejected') {
                         fetchNotifications();
-                    } else {
-                        console.log('Unknown SSE event:', data.event);
                     }
                 } catch (error) {
                     console.error('Error parsing SSE event:', error);
@@ -56,6 +53,7 @@ export const useSSE = () => {
             };
         };
 
+        fetchNotifications();
         connectSSE();
 
         return () => {
@@ -68,13 +66,4 @@ export const useSSE = () => {
             eventSource = null;
         };
     }, [user, fetchNotifications, isAdmin]);
-
-    useEffect(() => {
-        if (!user || !isAdmin) return;
-
-        const interval = setInterval(() => {
-            fetchNotifications();
-        }, 10000);
-        return () => clearInterval(interval);
-    }, [user, isAdmin, fetchNotifications]);
 };
