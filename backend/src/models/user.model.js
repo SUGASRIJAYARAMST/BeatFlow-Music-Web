@@ -41,8 +41,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-userSchema.index({ clerkId: 1 });
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ subscriptionExpiry: 1 });
 
