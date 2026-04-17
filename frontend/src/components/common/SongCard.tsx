@@ -33,7 +33,6 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
     const { playlists, fetchPlaylists, addSongToPlaylist, removeSongFromPlaylist } = usePlaylistStore();
     const navigate = useNavigate();
     const isLiked = likedSongs.some(s => s._id === song._id);
-    const [isLiking, setIsLiking] = useState(false);
     const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -74,14 +73,7 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
             setTimeout(() => navigate("/premium"), 500);
             return;
         }
-        setIsLiking(true);
-        try {
-            await toggleLike(song._id);
-        } catch (error) {
-            console.error("Like error:", error);
-        } finally {
-            setIsLiking(false);
-        }
+        toggleLike(song._id);
     };
 
     const handlePlay = (e: React.MouseEvent) => {
@@ -215,7 +207,6 @@ export const SongCard = ({ song, songs }: SongCardProps) => {
                 <div className='absolute bottom-2 right-2 flex gap-1.5 md:opacity-0 md:group-hover:opacity-100 md:translate-y-2 md:group-hover:translate-y-0 transition-all'>
                     <button 
                         onClick={handleLike}
-                        disabled={isLiking}
                         className={cn(
                             "size-9 rounded-full shadow-lg flex items-center justify-center transition-all",
                             isLiked ? "bg-emerald-500 text-white hover:bg-emerald-400" : "bg-white/90 text-emerald-600 hover:bg-emerald-500 hover:text-white"

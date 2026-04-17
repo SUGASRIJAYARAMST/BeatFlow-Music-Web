@@ -309,29 +309,37 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
     },
 
     toggleLike: async (songId) => {
+        const song = get().songs.find(s => s._id === songId) || 
+                     get().featuredSongs.find(s => s._id === songId) ||
+                     get().trendingSongs.find(s => s._id === songId) ||
+                     get().madeForYouSongs.find(s => s._id === songId) ||
+                     get().likedSongs.find(s => s._id === songId);
+        const songTitle = song?.title || "Song";
+        const isCurrentlyLiked = get().likedSongs.some(s => s._id === songId);
+
+        set((state) => ({
+            likedSongs: isCurrentlyLiked 
+                ? state.likedSongs.filter(s => s._id !== songId)
+                : song ? [...state.likedSongs, song] : state.likedSongs
+        }));
+
         try {
             const response = await axiosInstance.post("/users/like", { songId });
-            const { addNotification } = useNotificationStore.getState();
-            const song = get().songs.find(s => s._id === songId) || 
-                         get().featuredSongs.find(s => s._id === songId) ||
-                         get().trendingSongs.find(s => s._id === songId) ||
-                         get().madeForYouSongs.find(s => s._id === songId);
-            const songTitle = song?.title || "Song";
-            
-            if (response.data.success) {
-                const isLiked = response.data.isLiked;
-                if (isLiked) {
-                    if (song) set((state) => ({ likedSongs: [...state.likedSongs, song] }));
-                    addNotification(`Liked "${songTitle}"`, "success");
-                } else {
-                    set((state) => ({
-                        likedSongs: state.likedSongs.filter((song) => song._id !== songId)
-                    }));
-                    addNotification(`Unliked "${songTitle}"`, "info");
-                }
+            if (!response.data.success) {
+                set((state) => ({
+                    likedSongs: isCurrentlyLiked
+                        ? song ? [...state.likedSongs, song] : state.likedSongs
+                        : state.likedSongs.filter(s => s._id !== songId)
+                }));
+                toast.error(response.data.message || "Failed to update like");
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || error.message);
+            set((state) => ({
+                likedSongs: isCurrentlyLiked
+                    ? song ? [...state.likedSongs, song] : state.likedSongs
+                    : state.likedSongs.filter(s => s._id !== songId)
+            }));
+            toast.error(error.response?.data?.message || "Failed to update like");
         }
     },
 
