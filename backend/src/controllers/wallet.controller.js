@@ -59,12 +59,6 @@ export const addMoney = async (req, res, next) => {
     const { userId: clerkId } = req;
     const { amount } = req.body;
 
-    console.log("=== addMoney DEBUG ===");
-    console.log("CASHFREE_TEST_MODE:", CASHFREE_TEST_MODE);
-    console.log("CASHFREE_APP_ID:", CASHFREE_APP_ID ? CASHFREE_APP_ID.substring(0, 10) + "..." : "NOT SET");
-    console.log("isTestKey:", isTestKey);
-    console.log("====================");
-
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: "Invalid amount" });
     }
@@ -92,6 +86,15 @@ export const addMoney = async (req, res, next) => {
     }
 
     const orderId = `WF_${clerkId}_${Date.now()}`;
+
+    await Payment.create({
+      userId: user._id,
+      clerkId,
+      plan: "wallet_topup",
+      amount: Number(amount),
+      cashfreeOrderId: orderId,
+      status: "pending",
+    });
 
     if (CASHFREE_TEST_MODE) {
       return res.status(200).json({
