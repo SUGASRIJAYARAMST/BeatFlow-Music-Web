@@ -10,7 +10,7 @@ const paymentSchema = new mongoose.Schema(
     clerkId: { type: String, required: true },
     plan: {
       type: String,
-      enum: ["daily", "monthly", "yearly"],
+      enum: ["daily", "monthly", "yearly", "wallet_topup"],
       required: true,
     },
     amount: { type: Number, required: true },
