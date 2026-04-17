@@ -5,7 +5,9 @@ import { Wallet } from "../models/wallet.model.js";
 
 const APP_ID = process.env.CASHFREE_APP_ID;
 const SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-const IS_TEST_MODE = !APP_ID || !SECRET_KEY || process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test";
+const isTestKey = (APP_ID && APP_ID.startsWith("TEST")) || 
+                  (SECRET_KEY && SECRET_KEY.startsWith("cfsk_ma_test"));
+const IS_TEST_MODE = isTestKey || !APP_ID || !SECRET_KEY || process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test";
 
 const PRICING = {
   daily: { amount: 1, days: 1 },
