@@ -133,7 +133,7 @@ const startServer = async () => {
       useTempFiles: true,
       tempFileDir: path.join(__dirname, "tmp"),
       createParentPath: true,
-      limits: { fileSize: 1000 * 1024 * 1024 },
+      limits: { fileSize: 50 * 1024 * 1024 },
       abortOnLimit: true,
     })(req, res, next);
   });

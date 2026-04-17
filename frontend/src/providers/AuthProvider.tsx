@@ -108,21 +108,16 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchAndCacheAuth = async () => {
         try {
-            const [userRes, subRes] = await Promise.all([
-                axiosInstance.get("/users/me").catch(() => null),
-                axiosInstance.get("/payments/check-subscription").catch(() => null)
-            ]);
-
+            const userRes = await axiosInstance.get("/users/me").catch(() => null);
             if (userRes?.data) {
                 const { user, isAdmin, likedSongs, expiryTimestamp } = userRes.data;
                 authStore.set({ user, isAdmin, likedSongs: likedSongs || [] });
                 setLikedSongs(likedSongs || []);
                 
-                const expiry = expiryTimestamp || subRes?.data?.expiryTimestamp;
-                const isPremium = expiry ? Date.now() < expiry : false;
+                const isPremium = expiryTimestamp ? Date.now() < expiryTimestamp : false;
                 setPremiumStatus(isPremium || isAdmin, user?.role || null);
                 
-                        saveCachedAuth({ user, isAdmin, likedSongs: likedSongs || [], expiryTimestamp: expiry, timestamp: Date.now() });
+                saveCachedAuth({ user, isAdmin, likedSongs: likedSongs || [], expiryTimestamp, timestamp: Date.now() });
             }
         } catch (error) {
             console.error("Background auth refresh failed:", error);
