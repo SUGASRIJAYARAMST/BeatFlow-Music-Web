@@ -1,16 +1,11 @@
 import axios from "axios";
-import User from "../models/user.model.js";
+import User from "../models/user.js";
 import { Payment } from "../models/payment.model.js";
 import { Wallet } from "../models/wallet.model.js";
 
 const APP_ID = process.env.CASHFREE_APP_ID;
 const SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-// Test mode disabled in production for security
-// Only enable locally during development
-const IS_TEST_MODE =
-  process.env.NODE_ENV === "development" &&
-  (process.env.CASHFREE_MODE === "sandbox" ||
-  process.env.CASHFREE_MODE === "test");
+const IS_TEST_MODE = process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test" || process.env.NODE_ENV === "development";
 
 const PRICING = {
   daily: { amount: 1, days: 1 },

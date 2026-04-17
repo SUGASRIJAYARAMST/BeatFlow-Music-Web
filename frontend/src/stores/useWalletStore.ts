@@ -13,7 +13,8 @@ interface WalletStore {
     fetchPinStatus: () => Promise<boolean>;
     setPin: (pin: string) => Promise<boolean>;
     verifyPin: (pin: string) => Promise<{ verified: boolean; needsSetup: boolean }>;
-    addMoney: (amount: number) => Promise<boolean>;
+    addMoney: (amount: number) => Promise<{ success: boolean; orderId?: string; testMode?: boolean; paymentSessionId?: string }>;
+    verifyWalletTopup: (orderId: string) => Promise<boolean>;
     payFromWallet: (plan: string) => Promise<boolean>;
     withdraw: (amount: number) => Promise<boolean>;
     clearTransactions: () => Promise<boolean>;
@@ -82,12 +83,36 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await axiosInstance.post("/wallet/add-money", { amount });
-            set({ balance: response.data.balance, isLoading: false });
-            toast.success(response.data.message);
-            return true;
+            set({ isLoading: false });
+            return {
+                success: true,
+                orderId: response.data.orderId,
+                testMode: response.data.testMode,
+                paymentSessionId: response.data.paymentSessionId
+            };
         } catch (error: any) {
             set({ error: error.response?.data?.message || error.message, isLoading: false });
-            toast.error(error.response?.data?.message || "Failed to add money");
+            toast.error(error.response?.data?.message || "Failed to create payment");
+            return { success: false };
+        }
+    },
+
+    verifyWalletTopup: async (orderId: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axiosInstance.post("/wallet/verify-topup", { orderId });
+            if (response.data.success) {
+                set({ balance: response.data.balance, isLoading: false });
+                toast.success(response.data.message);
+                return true;
+            } else {
+                set({ isLoading: false });
+                toast.error(response.data.message || "Payment verification failed");
+                return false;
+            }
+        } catch (error: any) {
+            set({ error: error.response?.data?.message || error.message, isLoading: false });
+            toast.error(error.response?.data?.message || "Failed to verify payment");
             return false;
         }
     },

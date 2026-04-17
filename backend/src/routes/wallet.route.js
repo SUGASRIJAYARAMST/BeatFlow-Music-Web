@@ -8,12 +8,14 @@ import {
   withdrawFromWallet,
   clearTransactions,
   syncPastPayments,
+  verifyWalletTopup,
 } from "../controllers/wallet.controller.js";
 
 const router = express.Router();
 
 router.get("/", protectRoute, walletLimiter, getWallet);
 router.post("/add-money", protectRoute, walletLimiter, addMoney);
+router.post("/verify-topup", protectRoute, walletLimiter, verifyWalletTopup);
 router.post("/pay", protectRoute, walletLimiter, payFromWallet);
 router.post("/withdraw", protectRoute, walletLimiter, withdrawFromWallet);
 router.post("/clear-transactions", protectRoute, walletLimiter, clearTransactions);

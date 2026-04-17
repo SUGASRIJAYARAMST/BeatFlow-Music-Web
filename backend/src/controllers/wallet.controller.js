@@ -4,6 +4,11 @@ import { Payment } from "../models/payment.model.js";
 import { addToAdminWallet } from "./payment.controller.js";
 import Notification from "../models/notification.model.js";
 import { getCurrentOffer } from "./offer.controller.js";
+import axios from "axios";
+
+const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID;
+const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
+const CASHFREE_TEST_MODE = process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test" || process.env.NODE_ENV === "development";
 
 const PRICING = {
   daily: { days: 1 },
@@ -58,9 +63,7 @@ export const addMoney = async (req, res, next) => {
 
     const user = await User.findOne({ clerkId });
     if (user?.role === "admin") {
-      return res
-        .status(403)
-        .json({ message: "Admins cannot add money to wallet" });
+      return res.status(403).json({ message: "Admins cannot add money to wallet" });
     }
 
     let wallet = await Wallet.findOne({ clerkId });
@@ -69,8 +72,7 @@ export const addMoney = async (req, res, next) => {
     }
 
     const MAX_WALLET_BALANCE = 200;
-    const newBalance = wallet.balance + Number(amount);
-    if (newBalance > MAX_WALLET_BALANCE) {
+    if (wallet.balance + Number(amount) > MAX_WALLET_BALANCE) {
       return res.status(400).json({
         message: `Maximum wallet balance is ₹${MAX_WALLET_BALANCE}. You can only add ₹${MAX_WALLET_BALANCE - wallet.balance} more.`,
         maxAllowed: MAX_WALLET_BALANCE - wallet.balance,
@@ -78,24 +80,159 @@ export const addMoney = async (req, res, next) => {
       });
     }
 
-    wallet.balance = newBalance;
-    wallet.transactions.push({
-      type: "credit",
+    const orderId = `WF_${clerkId}_${Date.now()}`;
+
+    await Payment.create({
+      userId: user._id,
+      clerkId,
+      plan: "wallet_topup",
       amount: Number(amount),
-      description: "Wallet top-up",
+      cashfreeOrderId: orderId,
+      status: "pending",
     });
-    await wallet.save();
+
+    if (CASHFREE_TEST_MODE) {
+      return res.status(200).json({
+        success: true,
+        testMode: true,
+        paymentSessionId: `test_session_${orderId}`,
+        orderId,
+        amount: Number(amount),
+      });
+    }
+
+    const BASE_URL = "https://api.cashfree.com/pg";
+    const orderData = {
+      order_id: orderId,
+      order_amount: Number(amount),
+      order_currency: "INR",
+      customer_details: {
+        customer_id: clerkId,
+        customer_phone: user.phoneNumber?.replace(/\D/g, "").slice(-10) || "9999999999",
+        customer_name: user.fullName || "BeatFlow User",
+        customer_email: user.email,
+      },
+      order_meta: {
+        return_url: `${process.env.CLIENT_URL}/wallet?order_id={order_id}&type=wallet`,
+      },
+      order_note: "BeatFlow Wallet Top-up",
+    };
+
+    const response = await axios.post(`${BASE_URL}/orders`, orderData, {
+      headers: {
+        "Content-Type": "application/json",
+        "x-client-id": CASHFREE_APP_ID,
+        "x-client-secret": CASHFREE_SECRET_KEY,
+        "x-api-version": "2023-08-01",
+      },
+    });
 
     res.status(200).json({
       success: true,
-      balance: wallet.balance,
-      message: `₹${amount} added to wallet`,
+      paymentSessionId: response.data.payment_session_id,
+      orderId,
+      amount: Number(amount),
     });
   } catch (error) {
     console.error("Add money error:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to add money", error: error.message });
+    res.status(500).json({ message: "Failed to create payment order", error: error.message });
+  }
+};
+
+export const verifyWalletTopup = async (req, res, next) => {
+  try {
+    const { userId: clerkId } = req;
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ message: "orderId is required" });
+    }
+
+    const payment = await Payment.findOne({ cashfreeOrderId: orderId, plan: "wallet_topup" });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment record not found" });
+    }
+
+    if (payment.status === "success") {
+      return res.status(200).json({ success: true, message: "Payment already verified", balance: payment.amount });
+    }
+
+    if (CASHFREE_TEST_MODE) {
+      payment.status = "success";
+      payment.cashfreePaymentId = `test_wallet_${orderId}`;
+      await payment.save();
+
+      let wallet = await Wallet.findOne({ clerkId });
+      if (!wallet) {
+        wallet = await Wallet.create({ clerkId, balance: 0, transactions: [] });
+      }
+
+      wallet.balance += payment.amount;
+      wallet.transactions.push({
+        type: "credit",
+        amount: payment.amount,
+        description: "Wallet top-up",
+        orderId,
+      });
+      await wallet.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Wallet top-up successful",
+        balance: wallet.balance,
+        amount: payment.amount,
+      });
+    }
+
+    const BASE_URL = "https://api.cashfree.com/pg";
+    const response = await axios.get(`${BASE_URL}/orders/${orderId}`, {
+      headers: {
+        "x-client-id": CASHFREE_APP_ID,
+        "x-client-secret": CASHFREE_SECRET_KEY,
+        "x-api-version": "2023-08-01",
+      },
+    });
+
+    const order = response.data;
+
+    if (order.order_status === "PAID") {
+      payment.status = "success";
+      payment.cashfreePaymentId = order.cf_payment_id || "";
+      await payment.save();
+
+      let wallet = await Wallet.findOne({ clerkId });
+      if (!wallet) {
+        wallet = await Wallet.create({ clerkId, balance: 0, transactions: [] });
+      }
+
+      wallet.balance += payment.amount;
+      wallet.transactions.push({
+        type: "credit",
+        amount: payment.amount,
+        description: "Wallet top-up",
+        orderId,
+      });
+      await wallet.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Wallet top-up successful",
+        balance: wallet.balance,
+        amount: payment.amount,
+      });
+    }
+
+    if (order.order_status === "FAILED" || order.order_status === "CANCELLED" || order.order_status === "EXPIRED") {
+      payment.status = "failed";
+      await payment.save();
+      return res.status(400).json({ success: false, message: "Payment not completed" });
+    }
+
+    res.status(200).json({ success: false, message: "Payment is still processing" });
+  } catch (error) {
+    console.error("Verify wallet topup error:", error);
+    next(error);
   }
 };
 

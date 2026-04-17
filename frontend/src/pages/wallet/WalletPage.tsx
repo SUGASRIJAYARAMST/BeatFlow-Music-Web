@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useWalletStore } from "../../stores/useWalletStore";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useLanguageStore } from "../../stores/useLanguageStore";
@@ -9,12 +9,13 @@ import { ScrollArea } from "../../components/ui/scroll-area";
 import { Button } from "../../components/ui/button";
 import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, Loader2, History, X, KeyRound, ShieldCheck, Trash2, Crown, AlertCircle, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+import { load } from "@cashfreepayments/cashfree-js";
 
 type AddStep = "setup" | "amount" | "pin" | "processing" | "success";
 type ModalType = "addMoney" | "clearConfirm" | null;
 
 const WalletPage = () => {
-    const { balance, transactions, isLoading, fetchWallet, fetchPinStatus, setPin, verifyPin, addMoney, clearTransactions, syncPastPayments } = useWalletStore();
+    const { balance, transactions, isLoading, fetchWallet, fetchPinStatus, setPin, verifyPin, addMoney, verifyWalletTopup, clearTransactions, syncPastPayments } = useWalletStore();
     const { t } = useLanguageStore();
     const authUser = useAuthStore((state) => state.user);
     const isAdmin = authUser?.role === "admin";
@@ -173,12 +174,66 @@ const WalletPage = () => {
 
         setPinAttempts(0);
         setAddStep("processing");
-        const success = await addMoney(parseFloat(amount));
-        if (success) {
-            setAddStep("success");
-            fetchWallet();
-        } else {
+        
+        const moneyResult = await addMoney(parseFloat(amount));
+        
+        if (!moneyResult.success) {
             setAddStep("amount");
+            return;
+        }
+
+        if (moneyResult.testMode) {
+            const verified = await verifyWalletTopup(moneyResult.orderId!);
+            if (verified) {
+                setAddStep("success");
+                fetchWallet();
+            } else {
+                toast.error("Payment verification failed");
+                setAddStep("amount");
+            }
+        } else {
+            try {
+                const cashfree = await load({
+                    mode: "sandbox"
+                });
+                
+                if (!moneyResult.paymentSessionId) {
+                    toast.error("Failed to initialize payment");
+                    setAddStep("amount");
+                    return;
+                }
+                
+                const checkoutOptions = {
+                    paymentSessionId: moneyResult.paymentSessionId,
+                    returnUrl: `${window.location.origin}/wallet?order_id=${moneyResult.orderId}&type=wallet`,
+                };
+                
+                cashfree.checkout(checkoutOptions).then(async (response: any) => {
+                    if (response?.error) {
+                        toast.error(response.error.message);
+                        setAddStep("amount");
+                        return;
+                    }
+                    
+                    if (response?.referenceId) {
+                        const verified = await verifyWalletTopup(moneyResult.orderId!);
+                        if (verified) {
+                            setAddStep("success");
+                            fetchWallet();
+                        } else {
+                            toast.error("Payment verification failed");
+                            setAddStep("amount");
+                        }
+                    } else {
+                        toast.error("Payment was not completed");
+                        setAddStep("amount");
+                    }
+                });
+            } catch (error) {
+                console.error("Cashfree checkout error:", error);
+                toast.error("Failed to open payment page");
+                setAddStep("amount");
+            }
         }
     };
 

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.7",
     "@clerk/clerk-js": "^5.0.0",
     "@clerk/react": "^6.1.0",
     "@fontsource-variable/geist": "^5.2.8",
