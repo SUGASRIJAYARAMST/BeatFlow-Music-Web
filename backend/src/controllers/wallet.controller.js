@@ -8,13 +8,9 @@ import axios from "axios";
 
 const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID;
 const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-const CASHFREE_TEST_MODE = 
-  !CASHFREE_APP_ID || 
-  !CASHFREE_SECRET_KEY || 
-  CASHFREE_APP_ID?.startsWith("TEST") ||
-  CASHFREE_SECRET_KEY?.startsWith("cfsk_ma_test") ||
-  process.env.CASHFREE_MODE === "sandbox" || 
-  process.env.CASHFREE_MODE === "test";
+const isTestKey = (CASHFREE_APP_ID && CASHFREE_APP_ID.startsWith("TEST")) || 
+                  (CASHFREE_SECRET_KEY && CASHFREE_SECRET_KEY.startsWith("cfsk_ma_test"));
+const CASHFREE_TEST_MODE = isTestKey || !CASHFREE_APP_ID || !CASHFREE_SECRET_KEY || process.env.CASHFREE_MODE === "sandbox" || process.env.CASHFREE_MODE === "test";
 
 const PRICING = {
   daily: { days: 1 },
@@ -62,6 +58,12 @@ export const addMoney = async (req, res, next) => {
   try {
     const { userId: clerkId } = req;
     const { amount } = req.body;
+
+    console.log("=== addMoney DEBUG ===");
+    console.log("CASHFREE_TEST_MODE:", CASHFREE_TEST_MODE);
+    console.log("CASHFREE_APP_ID:", CASHFREE_APP_ID ? CASHFREE_APP_ID.substring(0, 10) + "..." : "NOT SET");
+    console.log("isTestKey:", isTestKey);
+    console.log("====================");
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: "Invalid amount" });
