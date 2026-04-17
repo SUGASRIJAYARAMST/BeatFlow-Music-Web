@@ -127,10 +127,11 @@ export const addMoney = async (req, res, next) => {
       orderId,
       amount: Number(amount),
     });
-  } catch (error) {
-    console.error("Add money error:", error);
-    console.error("Error details:", error.stack);
-    res.status(500).json({ message: "Failed to create payment order", error: error.message, details: error.toString() });
+    } catch (error) {
+    console.error("=== ADDMONEY ERROR ===");
+    console.error("Error:", error.message);
+    console.error("Stack:", error.stack);
+    res.status(500).json({ message: "Failed to create payment order", error: error.message });
   }
 };
 
