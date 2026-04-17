@@ -1,5 +1,5 @@
 import axios from "axios";
-import User from "../models/user.js";
+import User from "../models/user.model.js";
 import { Payment } from "../models/payment.model.js";
 import { Wallet } from "../models/wallet.model.js";
 
