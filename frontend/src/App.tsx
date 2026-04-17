@@ -65,20 +65,20 @@ function App() {
 
         <Route path="/admin" element={isAdmin && user ? <AdminLayout /> : <Navigate to="/" replace />}>
           {isAdmin && user && (
-            <Suspense fallback={<AdminPageLoader />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="upload-song" element={<AdminUploadSong />} />
-              <Route path="upload-album" element={<AdminUploadAlbum />} />
-              <Route path="songs" element={<AdminSongs />} />
-              <Route path="albums" element={<AdminAlbums />} />
-              <Route path="announcements" element={<AdminAnnouncements />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="subscriptions" element={<AdminSubscriptions />} />
-              <Route path="password-requests" element={<AdminPasswordRequests />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="offer" element={<AdminOffer />} />
-              <Route path="feedback" element={<AdminFeedback />} />
-            </Suspense>
+            <>
+              <Route index element={<Suspense fallback={<AdminPageLoader />}><AdminDashboard /></Suspense>} />
+              <Route path="upload-song" element={<Suspense fallback={<AdminPageLoader />}><AdminUploadSong /></Suspense>} />
+              <Route path="upload-album" element={<Suspense fallback={<AdminPageLoader />}><AdminUploadAlbum /></Suspense>} />
+              <Route path="songs" element={<Suspense fallback={<AdminPageLoader />}><AdminSongs /></Suspense>} />
+              <Route path="albums" element={<Suspense fallback={<AdminPageLoader />}><AdminAlbums /></Suspense>} />
+              <Route path="announcements" element={<Suspense fallback={<AdminPageLoader />}><AdminAnnouncements /></Suspense>} />
+              <Route path="users" element={<Suspense fallback={<AdminPageLoader />}><AdminUsers /></Suspense>} />
+              <Route path="subscriptions" element={<Suspense fallback={<AdminPageLoader />}><AdminSubscriptions /></Suspense>} />
+              <Route path="password-requests" element={<Suspense fallback={<AdminPageLoader />}><AdminPasswordRequests /></Suspense>} />
+              <Route path="settings" element={<Suspense fallback={<AdminPageLoader />}><AdminSettings /></Suspense>} />
+              <Route path="offer" element={<Suspense fallback={<AdminPageLoader />}><AdminOffer /></Suspense>} />
+              <Route path="feedback" element={<Suspense fallback={<AdminPageLoader />}><AdminFeedback /></Suspense>} />
+            </>
           )}
         </Route>
 
