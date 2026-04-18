@@ -1,6 +1,5 @@
 import { useAuthStore } from "../stores/useAuthStore";
 import { useAuth, useUser } from "@clerk/react";
-import { Loader } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useUserStore } from "../stores/useUserStore";
 import { usePlayerStore } from "../stores/usePlayerStore";
@@ -8,8 +7,6 @@ import { useMusicStore } from "../stores/useMusicStore";
 import { axiosInstance } from "../lib/axios";
 
 const AUTH_CACHE_KEY = "beatflow_auth_cache";
-const SUB_CACHE_KEY = "beatflow_sub_cache";
-const LIKED_CACHE_KEY = "beatflow_liked_cache";
 
 interface CachedAuthData {
     user: any;
@@ -42,7 +39,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { getToken, userId, isLoaded, signOut } = useAuth();
     const { user: clerkUser } = useUser();
     const [isReady, setIsReady] = useState(false);
-    const [isInitialRender, setIsInitialRender] = useState(true);
     const initRef = useRef(false);
     const { syncUser } = useUserStore();
     const { setPremiumStatus, setUserId } = usePlayerStore();
