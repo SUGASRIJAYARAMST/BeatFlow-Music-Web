@@ -62,6 +62,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         initRef.current = true;
 
         const initAuth = async () => {
+            setIsReady(true);
             try {
                 const token = await getToken();
                 const sessionActive = sessionStorage.getItem("beatflow_session");
@@ -84,7 +85,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         const isPremium = cachedAuth.expiryTimestamp ? Date.now() < cachedAuth.expiryTimestamp : false;
                         setPremiumStatus(isPremium || cachedAuth.isAdmin, cachedAuth.user?.role || null);
                         setUserId(userId || null);
-                        setIsReady(true);
 
                         syncUser(clerkUser).catch(() => {});
                         refreshAuthInBackground();
@@ -92,14 +92,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         setUserId(userId || null);
                         await syncUser(clerkUser);
                         await fetchAndCacheAuth();
-                        setIsReady(true);
                     }
-                } else {
-                    setIsReady(true);
                 }
             } catch (error) {
                 console.error("Auth init error:", error);
-                setIsReady(true);
             }
         };
 
@@ -127,13 +123,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const refreshAuthInBackground = () => {
         fetchAndCacheAuth().catch(() => {});
     };
-
-    if (!isReady)
-        return (
-            <div className='h-screen w-full flex items-center justify-center bg-base-300'>
-                <Loader className='size-8 text-primary animate-spin' />
-            </div>
-        );
 
     return <>{children}</>;
 };
