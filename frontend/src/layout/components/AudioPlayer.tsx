@@ -130,16 +130,12 @@ const AudioPlayer = () => {
 
         const onLoadedMetadata = () => {
             const storeState = usePlayerStore.getState();
-            const wasPlaying = storeState.isPlaying;
             const savedTime = storeState.currentTime;
             
             if (savedTime > 0 && hasRestoredRef.current === false) {
                 audio.currentTime = savedTime;
                 setCurrentTime(savedTime);
                 hasRestoredRef.current = true;
-                if (wasPlaying) {
-                    audio.play().catch(() => {});
-                }
             } else {
                 setCurrentTime(0);
             }

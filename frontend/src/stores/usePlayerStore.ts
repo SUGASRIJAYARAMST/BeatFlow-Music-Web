@@ -99,7 +99,7 @@ const checkAccess = (song: Song, isPremium: boolean, userRole: string | null): b
 
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
     currentSong: persisted.currentSong || null,
-    isPlaying: persisted.isPlaying ?? false,
+    isPlaying: false,
     queue: persisted.queue || [],
     currentIndex: persisted.currentIndex ?? -1,
     isShuffle: persisted.isShuffle ?? false,
