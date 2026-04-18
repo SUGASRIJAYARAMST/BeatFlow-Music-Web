@@ -128,16 +128,16 @@ const AudioPlayer = () => {
         audio.crossOrigin = "anonymous";
         audio.load();
 
-        const savedTime = usePlayerStore.getState().currentTime;
-        const savedDuration = (usePlayerStore.getState() as any).duration;
-        const isRestore = savedTime > 0 && savedDuration > 0 && hasRestoredRef.current === false;
-
         const onLoadedMetadata = () => {
-            if (isRestore) {
+            const storeState = usePlayerStore.getState();
+            const wasPlaying = storeState.isPlaying;
+            const savedTime = storeState.currentTime;
+            
+            if (savedTime > 0 && hasRestoredRef.current === false) {
                 audio.currentTime = savedTime;
                 setCurrentTime(savedTime);
                 hasRestoredRef.current = true;
-                if (storeIsPlayingRef.current) {
+                if (wasPlaying) {
                     audio.play().catch(() => {});
                 }
             } else {
