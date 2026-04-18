@@ -137,6 +137,9 @@ const AudioPlayer = () => {
                 audio.currentTime = savedTime;
                 setCurrentTime(savedTime);
                 hasRestoredRef.current = true;
+                if (storeIsPlayingRef.current) {
+                    audio.play().catch(() => {});
+                }
             } else {
                 setCurrentTime(0);
             }
@@ -144,14 +147,6 @@ const AudioPlayer = () => {
         };
 
         audio.addEventListener("loadedmetadata", onLoadedMetadata);
-
-        setTimeout(() => {
-            isTransitioningRef.current = false;
-            if (storeIsPlayingRef.current) {
-                isPlayingRef.current = true;
-                audio.play().catch(() => {});
-            }
-        }, 100);
 
         return () => {
             audio.removeEventListener("loadedmetadata", onLoadedMetadata);
